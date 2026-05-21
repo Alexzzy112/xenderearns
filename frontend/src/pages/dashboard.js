@@ -1,0 +1,146 @@
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Layout from '../components/Layout';
+import ProtectedRoute from '../components/ProtectedRoute';
+import StatsCard from '../components/StatsCard';
+import { userAPI, earningAPI } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { FiDollarSign, FiTrendingUp, FiBriefcase, FiArrowUpRight, FiClock } from 'react-icons/fi';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [dashboard, setDashboard] = useState(null);
+  const [earnings, setEarnings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [dashRes, earnRes] = await Promise.all([
+          userAPI.getDashboard(),
+          earningAPI.getEarnings(),
+        ]);
+        setDashboard(dashRes.data);
+        setEarnings(earnRes.data.earnings || []);
+      } catch (err) {
+        console.error('Failed to load dashboard', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  const chartData = earnings.slice(-7).map(e => ({
+    date: new Date(e.createdAt).toLocaleDateString(),
+    amount: e.amount,
+  }));
+
+  return (
+    <ProtectedRoute>
+      <Layout>
+        <div className="py-8 px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {user?.name}!</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Here's your investment overview</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatsCard icon={<FiDollarSign className="w-6 h-6" />} label="Wallet Balance" value={`₦${(dashboard?.wallet?.balance || 0).toLocaleString()}`} color="indigo" />
+            <StatsCard icon={<FiBriefcase className="w-6 h-6" />} label="Total Invested" value={`₦${(dashboard?.wallet?.totalInvested || 0).toLocaleString()}`} color="blue" />
+            <StatsCard icon={<FiTrendingUp className="w-6 h-6" />} label="Total Earnings" value={`₦${(dashboard?.wallet?.totalEarnings || 0).toLocaleString()}`} color="green" />
+            <StatsCard icon={<FiArrowUpRight className="w-6 h-6" />} label="Active Investments" value={dashboard?.activeInvestments || 0} color="yellow" />
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            <div className="card">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Earnings Chart (7 days)</h2>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+                    <XAxis dataKey="date" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-12">No earnings data yet</p>
+              )}
+            </div>
+
+            <div className="card">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Transactions</h2>
+              {dashboard?.recentTransactions?.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboard.recentTransactions.map((tx) => (
+                    <div key={tx._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'credit' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
+                          <FiDollarSign className={`w-5 h-5 ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white capitalize">{tx.description || tx.type}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.type === 'credit' ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-12">No transactions yet</p>
+              )}
+              <Link href="/transactions" className="block text-center mt-4 text-indigo-600 hover:text-indigo-500 font-medium">
+                View All Transactions
+              </Link>
+            </div>
+          </div>
+
+          <div className="card">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Active Investments</h2>
+            {dashboard?.activeInvestments?.length > 0 ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {dashboard.activeInvestments.map((inv) => (
+                  <div key={inv._id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                    <h3 className="font-bold text-gray-900 dark:text-white">{inv.product?.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Invested: ₦{(inv.amount || 0).toLocaleString()}</p>
+                    <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
+                      <FiTrendingUp className="w-4 h-4" />
+                      <span>₦{(inv.dailyEarning || 0).toLocaleString()}/day</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                      <FiClock className="w-4 h-4" />
+                      <span>{(inv.remainingDays || 0)} days left</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">You have no active investments</p>
+                <Link href="/products" className="btn-primary inline-block px-6 py-3">Browse Investment Products</Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </Layout>
+    </ProtectedRoute>
+  );
+}
