@@ -1,9 +1,13 @@
-const axios = require('axios');
-const crypto = require('crypto');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { sendEmail } = require('../services/emailService');
+
+const BANK_DETAILS = {
+  bankName: 'Moniepoint Microfinance Bank',
+  accountNumber: '6480276802',
+  accountName: 'Kwoku Azamu',
+};
 
 exports.initializeDeposit = async (req, res) => {
   try {
@@ -14,155 +18,79 @@ exports.initializeDeposit = async (req, res) => {
 
     const reference = `DEP-${Date.now()}-${req.user._id}`;
 
-    const response = await axios.post(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        email: req.user.email,
-        amount: amount * 100,
-        reference,
-        callback_url: `${process.env.APP_URL}/wallet`,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
     await Transaction.create({
       user: req.user._id,
       type: 'deposit',
       amount,
       status: 'pending',
       reference,
-      description: 'Wallet deposit'
+      description: 'Wallet deposit via bank transfer'
     });
 
-    res.json({ authorizationUrl: response.data.data.authorization_url, reference });
+    res.json({ reference, bankDetails: BANK_DETAILS });
   } catch (error) {
-    console.error('Deposit init error:', error.response?.data || error.message);
+    console.error('Deposit init error:', error.message);
     res.status(500).json({ message: 'Payment initialization failed' });
+  }
+};
+
+exports.confirmDeposit = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (transaction.status !== 'pending') return res.status(400).json({ message: 'Transaction already processed' });
+
+    const wallet = await Wallet.findOne({ user: transaction.user });
+    wallet.balance += transaction.amount;
+    await wallet.save();
+
+    transaction.status = 'completed';
+    await transaction.save();
+
+    const user = await User.findById(transaction.user);
+    const populatedWallet = await Wallet.findOne({ user: user._id });
+
+    if (req.io) {
+      req.io.to(`user-${user._id}`).emit('wallet-update', { wallet: populatedWallet });
+    }
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Deposit Successful - Xender Earnings',
+        html: `<p>₦${transaction.amount.toLocaleString()} has been credited to your wallet.</p>`
+      });
+    } catch (emailErr) {
+      console.error('Failed to send deposit email:', emailErr.message);
+    }
+
+    res.json({ message: 'Deposit confirmed', status: 'completed', wallet: populatedWallet });
+  } catch (error) {
+    console.error('Confirm deposit error:', error);
+    res.status(500).json({ message: 'Failed to confirm deposit' });
   }
 };
 
 exports.verifyDeposit = async (req, res) => {
   try {
     const { reference } = req.body;
-    const response = await axios.get(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
-      }
-    );
+    const transaction = await Transaction.findOne({ reference });
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
 
-    const data = response.data.data;
-    if (data.status === 'success') {
-      const amount = data.amount / 100;
-      const transaction = await Transaction.findOne({ reference });
-      if (!transaction || transaction.status === 'completed') {
-        return res.json({ message: 'Already processed', status: 'completed' });
-      }
+    const wallet = await Wallet.findOne({ user: transaction.user });
 
-      const wallet = await Wallet.findOne({ user: transaction.user });
-      wallet.balance += amount;
-      await wallet.save();
-
-      transaction.status = 'completed';
-      await transaction.save();
-
-      const user = await User.findById(transaction.user);
-      const populatedWallet = await Wallet.findOne({ user: user._id });
-
-      if (req.io) {
-        req.io.to(`user-${user._id}`).emit('wallet-update', { wallet: populatedWallet });
-      }
-
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: 'Deposit Successful - Xender Earnings',
-          html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
-        });
-      } catch (emailErr) {
-        console.error('Failed to send deposit email:', emailErr.message);
-      }
-
-      res.json({ message: 'Payment verified', status: 'completed', wallet: populatedWallet });
-    } else {
-      res.json({ message: 'Payment not successful', status: data.status });
-    }
+    res.json({ status: transaction.status, transaction, wallet });
   } catch (error) {
-    console.error('Verify error:', error.response?.data || error.message);
+    console.error('Verify error:', error.message);
     res.status(500).json({ message: 'Verification failed' });
   }
 };
 
 exports.paystackWebhook = async (req, res) => {
-  try {
-    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
-      .update(JSON.stringify(req.body))
-      .digest('hex');
-
-    if (hash !== req.headers['x-paystack-signature']) {
-      return res.status(401).json({ message: 'Invalid signature' });
-    }
-
-    const event = req.body;
-    if (event.event === 'charge.success') {
-      const reference = event.data.reference;
-      const amount = event.data.amount / 100;
-
-      const transaction = await Transaction.findOne({ reference });
-      if (transaction && transaction.status === 'pending') {
-        const wallet = await Wallet.findOne({ user: transaction.user });
-        wallet.balance += amount;
-        await wallet.save();
-
-        transaction.status = 'completed';
-        await transaction.save();
-
-        const user = await User.findById(transaction.user);
-        if (user) {
-          try {
-            await sendEmail({
-              to: user.email,
-              subject: 'Deposit Successful - Xender Earnings',
-              html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
-            });
-          } catch (emailErr) {
-            console.error('Failed to send deposit email:', emailErr.message);
-          }
-        }
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (error) {
-    console.error('Webhook error:', error);
-    res.sendStatus(500);
-  }
+  res.sendStatus(200);
 };
 
 exports.createVirtualAccount = async (req, res) => {
-  try {
-    const response = await axios.post(
-      'https://api.paystack.co/dedicated_account',
-      {
-        customer: { email: req.user.email },
-        preferred_bank: 'wema-bank',
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    res.json(response.data.data);
-  } catch (error) {
-    console.error('Virtual account error:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Failed to create virtual account' });
-  }
+  res.status(400).json({ message: 'Not available' });
 };

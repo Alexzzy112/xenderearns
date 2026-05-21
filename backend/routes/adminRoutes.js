@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const productController = require('../controllers/productController');
 const withdrawalController = require('../controllers/withdrawalController');
+const paymentController = require('../controllers/paymentController');
 const { adminProtect } = require('../middlewares/adminAuth');
 const { upload } = require('../utils/upload');
 
@@ -14,6 +15,7 @@ router.get('/users', adminController.getUsers);
 router.put('/users/:id/toggle-status', adminController.toggleUserStatus);
 router.get('/stats', adminController.getDashboardStats);
 router.get('/payments', adminController.getAllPayments);
+router.put('/payments/confirm', paymentController.confirmDeposit);
 router.get('/investment-stats', adminController.getInvestmentStats);
 
 router.post('/products', upload.single('image'), productController.createProduct);

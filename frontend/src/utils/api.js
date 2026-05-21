@@ -59,7 +59,7 @@ export const walletAPI = {
 };
 
 export const paymentAPI = {
-  initializeDeposit: (amount) => api.post('/payments/initialize', { amount }),
+  initializeDeposit: (data) => api.post('/payments/initialize', data),
   verifyDeposit: (reference) => api.post('/payments/verify', { reference }),
   createVirtualAccount: () => api.post('/payments/virtual-account'),
 };
@@ -80,6 +80,7 @@ export const adminAPI = {
   getUsers: (page) => api.get(`/admin/users?page=${page || 1}`),
   toggleUserStatus: (id) => api.put(`/admin/users/${id}/toggle-status`),
   getPayments: () => api.get('/admin/payments'),
+  confirmDeposit: (transactionId) => api.put('/admin/payments/confirm', { transactionId }),
   getInvestmentStats: () => api.get('/admin/investment-stats'),
   getWithdrawals: (status) => api.get(`/admin/withdrawals${status ? `?status=${status}` : ''}`),
   approveWithdrawal: (id) => api.put(`/admin/withdrawals/${id}/approve`),

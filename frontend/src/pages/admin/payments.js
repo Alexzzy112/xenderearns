@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiDollarSign } from 'react-icons/fi';
+import { FiDollarSign, FiCheck } from 'react-icons/fi';
 
 export default function AdminPayments() {
   const [payments, setPayments] = useState([]);
@@ -23,6 +23,16 @@ export default function AdminPayments() {
     };
     fetchPayments();
   }, [filter]);
+
+  const confirmPayment = async (transactionId) => {
+    try {
+      await adminAPI.confirmDeposit(transactionId);
+      toast.success('Payment confirmed');
+      setPayments(payments.map(p => p._id === transactionId ? { ...p, status: 'completed' } : p));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm');
+    }
+  };
 
   const checkAuth = () => {
     if (typeof window !== 'undefined' && !localStorage.getItem('adminToken')) {
@@ -61,7 +71,8 @@ export default function AdminPayments() {
                     <th className="p-4 font-medium">Email</th>
                     <th className="p-4 font-medium">Amount</th>
                     <th className="p-4 font-medium">Reference</th>
-                    <th className="p-4 font-medium text-right">Status</th>
+                    <th className="p-4 font-medium">Status</th>
+                    <th className="p-4 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -72,10 +83,17 @@ export default function AdminPayments() {
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{p.user?.email || 'N/A'}</td>
                       <td className="p-4 text-sm font-bold text-gray-900 dark:text-white">₦{(p.amount || 0).toLocaleString()}</td>
                       <td className="p-4 text-sm text-gray-500 dark:text-gray-400 font-mono">{p.reference || '-'}</td>
-                      <td className="p-4 text-right">
+                      <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'completed' || p.status === 'successful' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                           {p.status}
                         </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        {p.status === 'pending' && (
+                          <button onClick={() => confirmPayment(p._id)} className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg" title="Confirm Payment">
+                            <FiCheck className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
