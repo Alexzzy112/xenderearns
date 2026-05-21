@@ -93,6 +93,8 @@ export const adminAPI = {
   updateProduct: (id, data) => api.put(`/admin/products/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteProduct: (id) => api.delete(`/admin/products/${id}`),
   verifyKyc: (userId, verified) => api.put('/admin/kyc/verify', { userId, verified }),
+  getUserInvestments: (userId) => api.get(`/admin/users/${userId}/investments`),
+  cancelInvestment: (investmentId) => api.put(`/admin/investments/${investmentId}/cancel`),
 };
 
 export const userAPI = {

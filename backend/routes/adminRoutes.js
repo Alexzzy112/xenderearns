@@ -20,6 +20,8 @@ router.get('/payments', adminController.getAllPayments);
 router.delete('/payments/:id', adminController.deletePayment);
 router.put('/payments/confirm', paymentController.confirmDeposit);
 router.get('/investment-stats', adminController.getInvestmentStats);
+router.get('/users/:id/investments', adminController.getUserInvestments);
+router.put('/investments/:id/cancel', adminController.cancelInvestment);
 
 router.post('/products', upload.single('image'), productController.createProduct);
 router.put('/products/:id', upload.single('image'), productController.updateProduct);

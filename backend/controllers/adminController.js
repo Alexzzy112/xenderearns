@@ -32,8 +32,21 @@ exports.getUsers = async (req, res) => {
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
 
+    const userIds = users.map(u => u._id);
+    const investmentCounts = await UserInvestment.aggregate([
+      { $match: { user: { $in: userIds } } },
+      { $group: { _id: '$user', total: { $sum: 1 }, active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } } } }
+    ]);
+    const countMap = {};
+    investmentCounts.forEach(c => { countMap[c._id.toString()] = { total: c.total, active: c.active }; });
+    const usersWithCounts = users.map(u => ({
+      ...u.toObject(),
+      totalPurchased: countMap[u._id.toString()]?.total || 0,
+      activePurchased: countMap[u._id.toString()]?.active || 0,
+    }));
+
     const total = await User.countDocuments();
-    res.json({ users, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+    res.json({ users: usersWithCounts, total, page: parseInt(page), pages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -175,6 +188,48 @@ exports.getInvestmentStats = async (req, res) => {
       .populate('product', 'name')
       .sort({ createdAt: -1 });
     res.json(investments);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getUserInvestments = async (req, res) => {
+  try {
+    const investments = await UserInvestment.find({ user: req.params.id })
+      .populate('product', 'name')
+      .sort({ createdAt: -1 });
+    res.json({ investments });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.cancelInvestment = async (req, res) => {
+  try {
+    const investment = await UserInvestment.findById(req.params.id).populate('product', 'name');
+    if (!investment) return res.status(404).json({ message: 'Investment not found' });
+    if (investment.status !== 'active') return res.status(400).json({ message: 'Investment is not active' });
+
+    investment.status = 'cancelled';
+    await investment.save();
+
+    const wallet = await Wallet.findOne({ user: investment.user });
+    if (wallet) {
+      wallet.balance += investment.amount;
+      wallet.totalInvested = Math.max(0, wallet.totalInvested - investment.amount);
+      await wallet.save();
+    }
+
+    await Transaction.create({
+      user: investment.user,
+      type: 'refund',
+      amount: investment.amount,
+      status: 'completed',
+      description: `Investment in ${investment.product.name} cancelled by admin`,
+      reference: `CNL-${Date.now()}`
+    });
+
+    res.json({ message: 'Investment cancelled and funds refunded', investment });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
