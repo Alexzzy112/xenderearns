@@ -2,6 +2,7 @@ const InvestmentProduct = require('../models/InvestmentProduct');
 const UserInvestment = require('../models/UserInvestment');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -96,6 +97,28 @@ exports.purchaseProduct = async (req, res) => {
 
     if (req.io) {
       req.io.to(`user-${req.user._id}`).emit('investment-update', { investment, wallet });
+    }
+
+    const user = await User.findById(req.user._id).populate('referredBy');
+    if (user.referredBy) {
+      const commission = Math.round(product.investmentAmount * 0.4);
+      const referrerWallet = await Wallet.findOne({ user: user.referredBy._id });
+      if (referrerWallet) {
+        referrerWallet.balance += commission;
+        referrerWallet.referralBalance += commission;
+        await referrerWallet.save();
+        await Transaction.create({
+          user: user.referredBy._id,
+          type: 'referral_bonus',
+          amount: commission,
+          status: 'completed',
+          description: `40% commission from ${user.firstName} ${user.lastName}'s purchase`,
+          reference: `REF-${Date.now()}`
+        });
+        if (req.io) {
+          req.io.to(`user-${user.referredBy._id}`).emit('wallet-update', { wallet: referrerWallet });
+        }
+      }
     }
 
     res.status(201).json({ investment, wallet, message: 'Investment successful' });

@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const UserInvestment = require('../models/UserInvestment');
+const Transaction = require('../models/Transaction');
+const InvestmentProduct = require('../models/InvestmentProduct');
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -39,7 +41,7 @@ exports.addBankAccount = async (req, res) => {
 exports.getBankAccounts = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    res.json(user.bankAccounts);
+    res.json({ accounts: user.bankAccounts });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -52,8 +54,12 @@ exports.getDashboard = async (req, res) => {
       .populate('product')
       .sort({ createdAt: -1 });
     const activeInvestments = investments.filter(inv => inv.status === 'active');
+    const recentTransactions = await Transaction.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(5);
+    const products = await InvestmentProduct.find({ isActive: true });
 
-    res.json({ wallet, investments, activeInvestments: activeInvestments.length });
+    res.json({ wallet, investments, activeInvestments: activeInvestments.length, recentTransactions, products });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

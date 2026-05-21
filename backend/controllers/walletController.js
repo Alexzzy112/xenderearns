@@ -6,9 +6,9 @@ exports.getWallet = async (req, res) => {
     const wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
       const newWallet = await Wallet.create({ user: req.user._id });
-      return res.json(newWallet);
+      return res.json({ wallet: newWallet });
     }
-    res.json(wallet);
+    res.json({ wallet });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

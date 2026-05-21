@@ -67,6 +67,11 @@ exports.getDashboardStats = async (req, res) => {
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const pendingWithdrawals = await Withdrawal.countDocuments({ status: 'pending' });
+    const pendingPayments = await Transaction.countDocuments({ type: 'deposit', status: 'pending' });
+    const recentPayments = await Transaction.find({ type: 'deposit', status: 'pending' })
+      .populate('user', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.json({
       totalUsers,
@@ -75,6 +80,8 @@ exports.getDashboardStats = async (req, res) => {
       totalWithdrawals: totalWithdrawals[0]?.total || 0,
       totalInvested: totalInvested[0]?.total || 0,
       pendingWithdrawals,
+      pendingPayments,
+      recentPayments,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -83,10 +90,14 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getAllPayments = async (req, res) => {
   try {
-    const payments = await Transaction.find({ type: 'deposit' })
+    const filter = { type: 'deposit' };
+    if (req.query.status && req.query.status !== 'all') {
+      filter.status = req.query.status;
+    }
+    const payments = await Transaction.find(filter)
       .populate('user', 'firstName lastName email')
       .sort({ createdAt: -1 });
-    res.json(payments);
+    res.json({ payments });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

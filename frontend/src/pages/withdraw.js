@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { withdrawalAPI, walletAPI, userAPI } from '../utils/api';
 import { toast } from 'react-toastify';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiInfo } from 'react-icons/fi';
 
 export default function Withdraw() {
   const [wallet, setWallet] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
-  const [form, setForm] = useState({ amount: '', bankAccount: '', password: '' });
+  const [form, setForm] = useState({ amount: '', selectedAccount: '', password: '' });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showAddBank, setShowAddBank] = useState(false);
   const [bankForm, setBankForm] = useState({ bankName: '', accountNumber: '', accountName: '' });
+
+  const WITHDRAW_DAYS = ['Monday', 'Wednesday', 'Friday'];
+  const MIN_WITHDRAW = 1500;
+  const CHARGE_RATE = 0.3;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,7 +43,7 @@ export default function Withdraw() {
     e.preventDefault();
     try {
       const res = await userAPI.addBankAccount(bankForm);
-      setBankAccounts([...bankAccounts, res.data.account]);
+      setBankAccounts(res.data || []);
       setShowAddBank(false);
       setBankForm({ bankName: '', accountNumber: '', accountName: '' });
       toast.success('Bank account added');
@@ -51,28 +54,39 @@ export default function Withdraw() {
 
   const handleWithdraw = async (e) => {
     e.preventDefault();
-    if (!form.amount || Number(form.amount) < 100) {
-      toast.error('Minimum withdrawal is ₦100');
+    const amount = Number(form.amount);
+    if (!amount || amount < MIN_WITHDRAW) {
+      toast.error(`Minimum withdrawal is ₦${MIN_WITHDRAW.toLocaleString()}`);
       return;
     }
-    if (Number(form.amount) > (wallet?.withdrawalBalance || 0)) {
+    if (amount > (wallet?.withdrawableBalance || 0)) {
       toast.error('Insufficient withdrawal balance');
       return;
     }
-    if (!form.bankAccount) {
+    if (!form.selectedAccount) {
       toast.error('Please select a bank account');
+      return;
+    }
+    const acc = bankAccounts.find(a => a._id === form.selectedAccount);
+    if (!acc) {
+      toast.error('Bank account not found');
       return;
     }
     setSubmitting(true);
     try {
       await withdrawalAPI.request({
-        amount: Number(form.amount),
-        bankAccount: form.bankAccount,
-        password: form.password,
+        amount,
+        bankName: acc.bankName,
+        accountNumber: acc.accountNumber,
+        accountName: acc.accountName,
       });
       toast.success('Withdrawal request submitted successfully');
-      setForm({ amount: '', bankAccount: '', password: '' });
-      const wdRes = await withdrawalAPI.getUserWithdrawals();
+      setForm({ amount: '', selectedAccount: '', password: '' });
+      const [walletRes, wdRes] = await Promise.all([
+        walletAPI.getWallet(),
+        withdrawalAPI.getUserWithdrawals(),
+      ]);
+      setWallet(walletRes.data.wallet);
       setWithdrawals(wdRes.data.withdrawals || []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Withdrawal failed');
@@ -80,6 +94,9 @@ export default function Withdraw() {
       setSubmitting(false);
     }
   };
+
+  const charge = form.amount ? Math.round(Number(form.amount) * CHARGE_RATE) : 0;
+  const netAmount = form.amount ? Number(form.amount) - charge : 0;
 
   if (loading) {
     return (
@@ -100,7 +117,13 @@ export default function Withdraw() {
           <div className="max-w-3xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Withdraw Funds</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Withdrawable Balance: <span className="font-bold text-green-600">₦{(wallet?.withdrawalBalance || 0).toLocaleString()}</span></p>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Withdrawable Balance: <span className="font-bold text-green-600">₦{(wallet?.withdrawableBalance || 0).toLocaleString()}</span>
+              </p>
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <FiInfo className="w-4 h-4" />
+                <span>Available on: {WITHDRAW_DAYS.join(', ')} &middot; Min: ₦{MIN_WITHDRAW.toLocaleString()} &middot; 30% charge applies</span>
+              </div>
             </div>
 
             <div className="card mb-8">
@@ -125,8 +148,8 @@ export default function Withdraw() {
               {bankAccounts.length > 0 ? (
                 <div className="space-y-2">
                   {bankAccounts.map((acc) => (
-                    <label key={acc._id} className={`flex items-center p-3 rounded-lg border cursor-pointer ${form.bankAccount === acc._id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/50' : 'border-gray-200 dark:border-gray-700'}`}>
-                      <input type="radio" name="bankAccount" value={acc._id} checked={form.bankAccount === acc._id} onChange={(e) => setForm({ ...form, bankAccount: e.target.value })} className="mr-3" />
+                    <label key={acc._id} className={`flex items-center p-3 rounded-lg border cursor-pointer ${form.selectedAccount === acc._id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/50' : 'border-gray-200 dark:border-gray-700'}`}>
+                      <input type="radio" name="bankAccount" value={acc._id} checked={form.selectedAccount === acc._id} onChange={(e) => setForm({ ...form, selectedAccount: e.target.value })} className="mr-3" />
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{acc.accountName}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{acc.bankName} - {acc.accountNumber}</p>
@@ -144,13 +167,29 @@ export default function Withdraw() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount (₦)</label>
-                  <input type="number" className="input-field w-full" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="Enter amount" min="100" />
+                  <input type="number" className="input-field w-full" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder={`Enter amount (min ₦${MIN_WITHDRAW.toLocaleString()})`} min={MIN_WITHDRAW} />
                 </div>
+                {form.amount >= MIN_WITHDRAW && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Withdrawal Amount</span>
+                      <span className="font-medium">₦{Number(form.amount).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">30% Charge</span>
+                      <span className="font-medium text-red-600">-₦{charge.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-gray-300 dark:border-gray-600 pt-1">
+                      <span className="font-medium">You Receive</span>
+                      <span className="font-bold text-green-600">₦{netAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Password</label>
                   <input type="password" className="input-field w-full" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Enter your password to confirm" required />
                 </div>
-                <button type="submit" disabled={submitting || !form.bankAccount} className="btn-primary w-full py-3">
+                <button type="submit" disabled={submitting || !form.selectedAccount} className="btn-primary w-full py-3">
                   {submitting ? 'Processing...' : 'Request Withdrawal'}
                 </button>
               </div>
@@ -165,6 +204,7 @@ export default function Withdraw() {
                       <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                         <th className="pb-3 font-medium">Date</th>
                         <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Charge</th>
                         <th className="pb-3 font-medium">Bank</th>
                         <th className="pb-3 font-medium text-right">Status</th>
                       </tr>
@@ -174,7 +214,8 @@ export default function Withdraw() {
                         <tr key={wd._id} className="border-b border-gray-100 dark:border-gray-700">
                           <td className="py-3 text-sm text-gray-600 dark:text-gray-400">{new Date(wd.createdAt).toLocaleDateString()}</td>
                           <td className="py-3 text-sm font-bold text-gray-900 dark:text-white">₦{(wd.amount || 0).toLocaleString()}</td>
-                          <td className="py-3 text-sm text-gray-600 dark:text-gray-400">{wd.bankAccount?.bankName}</td>
+                          <td className="py-3 text-sm text-red-600">{wd.charge ? `₦${wd.charge.toLocaleString()}` : '-'}</td>
+                          <td className="py-3 text-sm text-gray-600 dark:text-gray-400">{wd.bankName || '-'}</td>
                           <td className="py-3 text-right">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${wd.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : wd.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                               {wd.status}

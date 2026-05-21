@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
-import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -23,6 +25,20 @@ export default function AdminDashboard() {
     };
     fetchStats();
   }, []);
+
+  const confirmPayment = async (transactionId) => {
+    setConfirming(transactionId);
+    try {
+      await adminAPI.confirmDeposit(transactionId);
+      toast.success('Payment confirmed');
+      const statsRes = await adminAPI.getStats();
+      setStats(prev => ({ ...prev, ...statsRes.data }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm');
+    } finally {
+      setConfirming(null);
+    }
+  };
 
   const checkAuth = () => {
     if (typeof window !== 'undefined' && !localStorage.getItem('adminToken')) {
@@ -141,6 +157,47 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {stats?.recentPayments?.length > 0 && (
+          <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pending Payments ({stats.pendingPayments})</h2>
+              <a href="/admin/payments" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">View All</a>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                    <th className="pb-3 font-medium">User</th>
+                    <th className="pb-3 font-medium">Amount</th>
+                    <th className="pb-3 font-medium">Reference</th>
+                    <th className="pb-3 font-medium">Date</th>
+                    <th className="pb-3 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentPayments.map((p) => (
+                    <tr key={p._id} className="border-b border-gray-100 dark:border-gray-700">
+                      <td className="py-3 text-sm text-gray-900 dark:text-white">{p.user?.firstName || p.user?.name} {p.user?.lastName || ''}</td>
+                      <td className="py-3 text-sm font-bold text-gray-900 dark:text-white">₦{(p.amount || 0).toLocaleString()}</td>
+                      <td className="py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{p.reference ? p.reference.slice(0, 16) + '...' : '-'}</td>
+                      <td className="py-3 text-sm text-gray-500 dark:text-gray-400">{new Date(p.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => confirmPayment(p._id)}
+                          disabled={confirming === p._id}
+                          className="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        >
+                          {confirming === p._id ? '...' : <><FiCheck className="w-3.5 h-3.5 inline mr-1" />Confirm</>}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
