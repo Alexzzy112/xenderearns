@@ -40,12 +40,16 @@ exports.register = async (req, res) => {
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
 
-    const verificationUrl = `${process.env.APP_URL}/verify-email/${verificationToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: 'Verify your email - Xender Earnings',
-      html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email. Expires in 24 hours.</p>`
-    });
+    try {
+      const verificationUrl = `${process.env.APP_URL}/verify-email/${verificationToken}`;
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your email - Xender Earnings',
+        html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email. Expires in 24 hours.</p>`
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification email:', emailErr.message);
+    }
 
     const token = generateToken(user._id);
     res.status(201).json({
