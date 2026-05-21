@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     accountName: String,
     isDefault: { type: Boolean, default: false }
   }],
+  maxActiveInvestments: { type: Number, default: 0 },
   verificationToken: String,
   verificationTokenExpires: Date,
   resetPasswordToken: String,

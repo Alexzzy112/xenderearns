@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX, FiSliders } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(null);
   const [approvingWd, setApprovingWd] = useState(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
+  const [limitValue, setLimitValue] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -52,6 +56,29 @@ export default function AdminDashboard() {
       toast.error(err.response?.data?.message || 'Failed to approve');
     } finally {
       setApprovingWd(null);
+    }
+  };
+
+  const openLimitModal = async () => {
+    try {
+      const res = await adminAPI.getUsers({ page: 1, limit: 200 });
+      setUsers(res.data.users || []);
+    } catch (err) {
+      toast.error('Failed to load users');
+    }
+    setSelectedUser('');
+    setLimitValue(0);
+    setShowLimitModal(true);
+  };
+
+  const handleSetLimit = async () => {
+    if (!selectedUser) return toast.error('Select a user');
+    try {
+      await adminAPI.setPurchaseLimit(selectedUser, limitValue);
+      toast.success('Purchase limit updated');
+      setShowLimitModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update limit');
     }
   };
 
@@ -169,6 +196,10 @@ export default function AdminDashboard() {
                 <FiTrendingUp className="w-6 h-6 text-yellow-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">Withdrawals</span>
               </a>
+              <button onClick={openLimitModal} className="p-4 bg-purple-50 dark:bg-purple-900/50 rounded-xl text-center hover:shadow-md transition-shadow">
+                <FiSliders className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">Purchase Limit</span>
+              </button>
             </div>
           </div>
         </div>
@@ -254,6 +285,38 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {showLimitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowLimitModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Set Purchase Limit</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User</label>
+                <select className="input-field" value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
+                  <option value="">Select a user</option>
+                  {users.map(u => (
+                    <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Active Investments</label>
+                <input type="number" className="input-field" min="0" value={limitValue} onChange={e => setLimitValue(Number(e.target.value))} placeholder="0 = unlimited" />
+                <p className="text-xs text-gray-500 mt-1">Set to 0 for no limit</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowLimitModal(false)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleSetLimit} className="flex-1 py-2.5 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

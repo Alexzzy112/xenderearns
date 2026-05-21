@@ -69,6 +69,14 @@ exports.purchaseProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found or inactive' });
     }
 
+    const user = await User.findById(req.user._id).populate('referredBy');
+    if (user.maxActiveInvestments > 0) {
+      const activeCount = await UserInvestment.countDocuments({ user: req.user._id, status: 'active' });
+      if (activeCount >= user.maxActiveInvestments) {
+        return res.status(400).json({ message: `Purchase limit reached. You can only have ${user.maxActiveInvestments} active investment(s) at a time.` });
+      }
+    }
+
     const wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet || wallet.balance < product.investmentAmount) {
       return res.status(400).json({ message: 'Insufficient balance' });
@@ -99,7 +107,6 @@ exports.purchaseProduct = async (req, res) => {
       req.io.to(`user-${req.user._id}`).emit('investment-update', { investment, wallet });
     }
 
-    const user = await User.findById(req.user._id).populate('referredBy');
     if (user.referredBy) {
       const commission = Math.round(product.investmentAmount * 0.4);
       const referrerWallet = await Wallet.findOne({ user: user.referredBy._id });

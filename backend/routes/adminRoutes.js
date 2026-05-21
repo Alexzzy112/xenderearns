@@ -13,6 +13,7 @@ router.get('/seed', adminController.seedAdmin);
 router.use(adminProtect);
 router.get('/users', adminController.getUsers);
 router.put('/users/:id/toggle-status', adminController.toggleUserStatus);
+router.put('/users/purchase-limit', adminController.setUserPurchaseLimit);
 router.delete('/users/:id', adminController.deleteUser);
 router.get('/stats', adminController.getDashboardStats);
 router.get('/payments', adminController.getAllPayments);

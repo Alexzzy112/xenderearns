@@ -180,6 +180,19 @@ exports.getInvestmentStats = async (req, res) => {
   }
 };
 
+exports.setUserPurchaseLimit = async (req, res) => {
+  try {
+    const { userId, maxActiveInvestments } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.maxActiveInvestments = maxActiveInvestments;
+    await user.save();
+    res.json({ message: 'Purchase limit updated', user: { id: user._id, maxActiveInvestments: user.maxActiveInvestments } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.seedAdmin = async (req, res) => {
   try {
     const existing = await Admin.findOne({ email: 'admin@xender.com' });

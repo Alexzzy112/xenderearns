@@ -79,6 +79,7 @@ export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
   getUsers: (page) => api.get(`/admin/users?page=${page || 1}`),
   toggleUserStatus: (id) => api.put(`/admin/users/${id}/toggle-status`),
+  setPurchaseLimit: (userId, maxActiveInvestments) => api.put('/admin/users/purchase-limit', { userId, maxActiveInvestments }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   getPayments: () => api.get('/admin/payments'),
   deletePayment: (id) => api.delete(`/admin/payments/${id}`),
