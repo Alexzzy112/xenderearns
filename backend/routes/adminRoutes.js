@@ -13,8 +13,10 @@ router.get('/seed', adminController.seedAdmin);
 router.use(adminProtect);
 router.get('/users', adminController.getUsers);
 router.put('/users/:id/toggle-status', adminController.toggleUserStatus);
+router.delete('/users/:id', adminController.deleteUser);
 router.get('/stats', adminController.getDashboardStats);
 router.get('/payments', adminController.getAllPayments);
+router.delete('/payments/:id', adminController.deletePayment);
 router.put('/payments/confirm', paymentController.confirmDeposit);
 router.get('/investment-stats', adminController.getInvestmentStats);
 
@@ -25,6 +27,7 @@ router.delete('/products/:id', productController.deleteProduct);
 router.get('/withdrawals', withdrawalController.getAllWithdrawals);
 router.put('/withdrawals/:id/approve', withdrawalController.approveWithdrawal);
 router.put('/withdrawals/:id/reject', withdrawalController.rejectWithdrawal);
+router.put('/withdrawals/:id/reverse', adminController.reverseWithdrawal);
 
 
 module.exports = router;

@@ -33,6 +33,7 @@ export default function Navbar() {
                 <Link href="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600">Dashboard</Link>
                 <Link href="/products" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600">Invest</Link>
                 <Link href="/wallet" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600">Wallet</Link>
+                <Link href="/contact" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600">Contact Admin</Link>
                 <Link href="/profile" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                   <FiUser className="text-lg" />
                 </Link>
@@ -63,6 +64,7 @@ export default function Navbar() {
               <Link href="/dashboard" className="block py-2" onClick={() => setIsOpen(false)}>Dashboard</Link>
               <Link href="/products" className="block py-2" onClick={() => setIsOpen(false)}>Invest</Link>
               <Link href="/wallet" className="block py-2" onClick={() => setIsOpen(false)}>Wallet</Link>
+              <Link href="/contact" className="block py-2" onClick={() => setIsOpen(false)}>Contact Admin</Link>
               <Link href="/profile" className="block py-2" onClick={() => setIsOpen(false)}>Profile</Link>
               <button onClick={() => { logout(); setIsOpen(false); }} className="block py-2 text-red-500">Logout</button>
             </>

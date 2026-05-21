@@ -72,6 +72,10 @@ exports.getDashboardStats = async (req, res) => {
       .populate('user', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .limit(5);
+    const recentWithdrawals = await Withdrawal.find({ status: 'pending' })
+      .populate('user', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.json({
       totalUsers,
@@ -82,6 +86,7 @@ exports.getDashboardStats = async (req, res) => {
       pendingWithdrawals,
       pendingPayments,
       recentPayments,
+      recentWithdrawals,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -98,6 +103,66 @@ exports.getAllPayments = async (req, res) => {
       .populate('user', 'firstName lastName email')
       .sort({ createdAt: -1 });
     res.json({ payments });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deletePayment = async (req, res) => {
+  try {
+    const transaction = await Transaction.findByIdAndDelete(req.params.id);
+    if (!transaction) return res.status(404).json({ message: 'Payment not found' });
+    res.json({ message: 'Payment deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    await Promise.all([
+      Wallet.deleteOne({ user: user._id }),
+      UserInvestment.deleteMany({ user: user._id }),
+      Transaction.deleteMany({ user: user._id }),
+      Withdrawal.deleteMany({ user: user._id }),
+      User.findByIdAndDelete(user._id),
+    ]);
+    res.json({ message: 'User and all associated data deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.reverseWithdrawal = async (req, res) => {
+  try {
+    const withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+    if (withdrawal.status !== 'approved') return res.status(400).json({ message: 'Only approved withdrawals can be reversed' });
+
+    const wallet = await Wallet.findOne({ user: withdrawal.user });
+    if (wallet) {
+      wallet.balance += withdrawal.amount;
+      wallet.withdrawableBalance += withdrawal.amount;
+      wallet.totalWithdrawn = Math.max(0, wallet.totalWithdrawn - withdrawal.amount);
+      await wallet.save();
+    }
+
+    withdrawal.status = 'rejected';
+    withdrawal.adminNote = 'Reversed by admin';
+    await withdrawal.save();
+
+    await Transaction.create({
+      user: withdrawal.user,
+      type: 'withdrawal',
+      amount: withdrawal.amount,
+      status: 'failed',
+      description: `Withdrawal reversed by admin`,
+      reference: `REV-${Date.now()}`
+    });
+
+    res.json({ message: 'Withdrawal reversed and funds returned' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

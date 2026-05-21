@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiSearch, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import { FiSearch, FiToggleLeft, FiToggleRight, FiTrash2 } from 'react-icons/fi';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -32,6 +32,17 @@ export default function AdminUsers() {
       toast.success(`User ${currentStatus === 'active' ? 'suspended' : 'activated'}`);
     } catch (err) {
       toast.error('Failed to update user');
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to permanently delete this user and all their data?')) return;
+    try {
+      await adminAPI.deleteUser(userId);
+      toast.success('User deleted');
+      setUsers(users.filter(u => u._id !== userId));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -89,9 +100,14 @@ export default function AdminUsers() {
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        <button onClick={() => toggleStatus(u._id, u.status)} className={`p-2 rounded-lg ${u.status === 'active' ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50' : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50'}`} title={u.status === 'active' ? 'Suspend' : 'Activate'}>
-                          {u.status === 'active' ? <FiToggleRight className="w-5 h-5" /> : <FiToggleLeft className="w-5 h-5" />}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => toggleStatus(u._id, u.status)} className={`p-2 rounded-lg ${u.status === 'active' ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50' : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50'}`} title={u.status === 'active' ? 'Suspend' : 'Activate'}>
+                            {u.status === 'active' ? <FiToggleRight className="w-5 h-5" /> : <FiToggleLeft className="w-5 h-5" />}
+                          </button>
+                          <button onClick={() => deleteUser(u._id)} className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg" title="Delete User">
+                            <FiTrash2 className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

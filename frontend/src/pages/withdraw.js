@@ -17,7 +17,7 @@ export default function Withdraw() {
 
   const WITHDRAW_DAYS = ['Monday', 'Wednesday', 'Friday'];
   const MIN_WITHDRAW = 1500;
-  const CHARGE_RATE = 0.3;
+  const CHARGE_RATE = 0.2;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,9 +120,15 @@ export default function Withdraw() {
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Withdrawable Balance: <span className="font-bold text-green-600">₦{(wallet?.withdrawableBalance || 0).toLocaleString()}</span>
               </p>
-              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <FiInfo className="w-4 h-4" />
-                <span>Available on: {WITHDRAW_DAYS.join(', ')} &middot; Min: ₦{MIN_WITHDRAW.toLocaleString()} &middot; 30% charge applies</span>
+              <div className="mt-2 space-y-1 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <FiInfo className="w-4 h-4" />
+                  <span>Available on: {WITHDRAW_DAYS.join(', ')} &middot; Min: ₦{MIN_WITHDRAW.toLocaleString()} &middot; 20% charge applies</span>
+                </div>
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-medium">
+                  <FiInfo className="w-4 h-4" />
+                  <span>Withdrawals are approved within not more than 24hrs</span>
+                </div>
               </div>
             </div>
 
@@ -176,7 +182,7 @@ export default function Withdraw() {
                       <span className="font-medium">₦{Number(form.amount).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">30% Charge</span>
+                      <span className="text-gray-500">20% Charge</span>
                       <span className="font-medium text-red-600">-₦{charge.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between border-t border-gray-300 dark:border-gray-600 pt-1">

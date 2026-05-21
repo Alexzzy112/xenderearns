@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiDollarSign, FiCheck } from 'react-icons/fi';
+import { FiDollarSign, FiCheck, FiTrash2 } from 'react-icons/fi';
 
 export default function AdminPayments() {
   const [payments, setPayments] = useState([]);
@@ -31,6 +31,17 @@ export default function AdminPayments() {
       setPayments(payments.map(p => p._id === transactionId ? { ...p, status: 'completed' } : p));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to confirm');
+    }
+  };
+
+  const deletePayment = async (transactionId) => {
+    if (!confirm('Are you sure you want to delete this payment record?')) return;
+    try {
+      await adminAPI.deletePayment(transactionId);
+      toast.success('Payment deleted');
+      setPayments(payments.filter(p => p._id !== transactionId));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete');
     }
   };
 
@@ -89,11 +100,16 @@ export default function AdminPayments() {
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        {p.status === 'pending' && (
-                          <button onClick={() => confirmPayment(p._id)} className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg" title="Confirm Payment">
-                            <FiCheck className="w-5 h-5" />
+                        <div className="flex items-center justify-end gap-2">
+                          {p.status === 'pending' && (
+                            <button onClick={() => confirmPayment(p._id)} className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg" title="Confirm Payment">
+                              <FiCheck className="w-5 h-5" />
+                            </button>
+                          )}
+                          <button onClick={() => deletePayment(p._id)} className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg" title="Delete">
+                            <FiTrash2 className="w-5 h-5" />
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(null);
+  const [approvingWd, setApprovingWd] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -37,6 +38,20 @@ export default function AdminDashboard() {
       toast.error(err.response?.data?.message || 'Failed to confirm');
     } finally {
       setConfirming(null);
+    }
+  };
+
+  const approveWithdrawal = async (id) => {
+    setApprovingWd(id);
+    try {
+      await adminAPI.approveWithdrawal(id);
+      toast.success('Withdrawal approved');
+      const statsRes = await adminAPI.getStats();
+      setStats(prev => ({ ...prev, ...statsRes.data }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to approve');
+    } finally {
+      setApprovingWd(null);
     }
   };
 
@@ -189,6 +204,46 @@ export default function AdminDashboard() {
                           className="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                         >
                           {confirming === p._id ? '...' : <><FiCheck className="w-3.5 h-3.5 inline mr-1" />Confirm</>}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {stats?.recentWithdrawals?.length > 0 && (
+          <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pending Withdrawals ({stats.pendingWithdrawals})</h2>
+              <a href="/admin/withdrawals" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">View All</a>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                    <th className="pb-3 font-medium">User</th>
+                    <th className="pb-3 font-medium">Amount</th>
+                    <th className="pb-3 font-medium">Bank</th>
+                    <th className="pb-3 font-medium">Date</th>
+                    <th className="pb-3 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentWithdrawals.map((w) => (
+                    <tr key={w._id} className="border-b border-gray-100 dark:border-gray-700">
+                      <td className="py-3 text-sm text-gray-900 dark:text-white">{w.user?.firstName || w.user?.name} {w.user?.lastName || ''}</td>
+                      <td className="py-3 text-sm font-bold text-gray-900 dark:text-white">₦{(w.amount || 0).toLocaleString()}</td>
+                      <td className="py-3 text-sm text-gray-500 dark:text-gray-400">{w.bankName || '-'}</td>
+                      <td className="py-3 text-sm text-gray-500 dark:text-gray-400">{new Date(w.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => approveWithdrawal(w._id)}
+                          disabled={approvingWd === w._id}
+                          className="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        >
+                          {approvingWd === w._id ? '...' : <><FiCheck className="w-3.5 h-3.5 inline mr-1" />Approve</>}
                         </button>
                       </td>
                     </tr>

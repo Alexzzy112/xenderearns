@@ -30,7 +30,7 @@ exports.requestWithdrawal = async (req, res) => {
       return res.status(400).json({ message: 'Minimum withdrawal is ₦1,500' });
     }
 
-    const charge = Math.round(amount * 0.3);
+    const charge = Math.round(amount * 0.2);
     const netAmount = amount - charge;
 
     if (wallet.balance < amount) {
@@ -38,7 +38,7 @@ exports.requestWithdrawal = async (req, res) => {
     }
 
     wallet.balance -= amount;
-    wallet.withdrawableBalance -= netAmount;
+    wallet.withdrawableBalance = Math.max(0, wallet.withdrawableBalance - netAmount);
     wallet.totalWithdrawn += netAmount;
     await wallet.save();
 

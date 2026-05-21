@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiCheck, FiX, FiTrendingUp } from 'react-icons/fi';
+import { FiCheck, FiX, FiTrendingUp, FiRefreshCw } from 'react-icons/fi';
 
 export default function AdminWithdrawals() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -44,6 +44,17 @@ export default function AdminWithdrawals() {
     }
   };
 
+  const handleReverse = async (id) => {
+    if (!confirm('Reverse this approved withdrawal? Funds will be returned to the user.')) return;
+    try {
+      await adminAPI.reverseWithdrawal(id);
+      setWithdrawals(withdrawals.map(w => w._id === id ? { ...w, status: 'rejected' } : w));
+      toast.success('Withdrawal reversed and funds returned');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reverse withdrawal');
+    }
+  };
+
   const checkAuth = () => {
     if (typeof window !== 'undefined' && !localStorage.getItem('adminToken')) {
       window.location.href = '/admin/login';
@@ -79,6 +90,7 @@ export default function AdminWithdrawals() {
                     <th className="p-4 font-medium">Date</th>
                     <th className="p-4 font-medium">User</th>
                     <th className="p-4 font-medium">Amount</th>
+                    <th className="p-4 font-medium">Charge</th>
                     <th className="p-4 font-medium">Bank</th>
                     <th className="p-4 font-medium">Account</th>
                     <th className="p-4 font-medium">Status</th>
@@ -89,22 +101,30 @@ export default function AdminWithdrawals() {
                   {withdrawals.map((w) => (
                     <tr key={w._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{new Date(w.createdAt).toLocaleDateString()}</td>
-                      <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">{w.user?.name || 'N/A'}</td>
+                      <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">{w.user?.name || w.user?.firstName || 'N/A'} {w.user?.lastName || ''}</td>
                       <td className="p-4 text-sm font-bold text-gray-900 dark:text-white">₦{(w.amount || 0).toLocaleString()}</td>
-                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{w.bankAccount?.bankName || 'N/A'}</td>
-                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{w.bankAccount?.accountNumber || 'N/A'}</td>
+                      <td className="p-4 text-sm text-red-600">{w.charge ? `₦${w.charge.toLocaleString()}` : '-'}</td>
+                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{w.bankName || w.bankAccount?.bankName || 'N/A'}</td>
+                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{w.accountNumber || w.bankAccount?.accountNumber || 'N/A'}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${w.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : w.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                           {w.status}
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        {w.status === 'pending' && (
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleApprove(w._id)} className="p-2 bg-green-100 dark:bg-green-900 text-green-600 rounded-lg hover:bg-green-200 dark:hover:bg-green-800"><FiCheck className="w-4 h-4" /></button>
-                            <button onClick={() => handleReject(w._id)} className="p-2 bg-red-100 dark:bg-red-900 text-red-600 rounded-lg hover:bg-red-200 dark:hover:bg-red-800"><FiX className="w-4 h-4" /></button>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {w.status === 'pending' && (
+                            <>
+                              <button onClick={() => handleApprove(w._id)} className="p-2 bg-green-100 dark:bg-green-900 text-green-600 rounded-lg hover:bg-green-200 dark:hover:bg-green-800" title="Approve"><FiCheck className="w-4 h-4" /></button>
+                              <button onClick={() => handleReject(w._id)} className="p-2 bg-red-100 dark:bg-red-900 text-red-600 rounded-lg hover:bg-red-200 dark:hover:bg-red-800" title="Reject"><FiX className="w-4 h-4" /></button>
+                            </>
+                          )}
+                          {w.status === 'approved' && (
+                            <button onClick={() => handleReverse(w._id)} className="p-2 bg-orange-100 dark:bg-orange-900 text-orange-600 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800" title="Reverse">
+                              <FiRefreshCw className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

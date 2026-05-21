@@ -1,5 +1,6 @@
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
+const UserInvestment = require('../models/UserInvestment');
 
 exports.getWallet = async (req, res) => {
   try {
@@ -7,6 +8,14 @@ exports.getWallet = async (req, res) => {
     if (!wallet) {
       const newWallet = await Wallet.create({ user: req.user._id });
       return res.json({ wallet: newWallet });
+    }
+    const hasInvestment = await UserInvestment.findOne({
+      user: req.user._id,
+      status: { $in: ['active', 'completed'] }
+    });
+    if (hasInvestment && wallet.withdrawableBalance < wallet.balance) {
+      wallet.withdrawableBalance = wallet.balance;
+      await wallet.save();
     }
     res.json({ wallet });
   } catch (error) {
