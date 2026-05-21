@@ -39,7 +39,10 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use(express.static(path.join(__dirname, '../frontend/out')));
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/out/index.html'));
+  const filePath = path.join(__dirname, '../frontend/out', req.path === '/' ? 'index.html' : req.path + '.html');
+  res.sendFile(filePath, err => {
+    if (err) res.sendFile(path.join(__dirname, '../frontend/out/index.html'));
+  });
 });
 
 require('./jobs/earningsCron');

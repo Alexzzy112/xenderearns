@@ -9,7 +9,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
+    const token = config.url?.startsWith('/admin/') ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -19,10 +19,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      const isAdmin = error.config?.url?.startsWith('/admin/');
+      if (isAdmin) {
+        localStorage.removeItem('adminToken');
+        if (window.location.pathname !== '/admin/login') {
+          window.location.href = '/admin/login';
+        }
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

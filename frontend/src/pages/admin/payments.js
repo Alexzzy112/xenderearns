@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiDollarSign, FiSearch } from 'react-icons/fi';
+import { FiDollarSign } from 'react-icons/fi';
 
 export default function AdminPayments() {
   const [payments, setPayments] = useState([]);
@@ -60,7 +60,6 @@ export default function AdminPayments() {
                     <th className="p-4 font-medium">User</th>
                     <th className="p-4 font-medium">Email</th>
                     <th className="p-4 font-medium">Amount</th>
-                    <th className="p-4 font-medium">Gateway</th>
                     <th className="p-4 font-medium">Reference</th>
                     <th className="p-4 font-medium text-right">Status</th>
                   </tr>
@@ -69,10 +68,9 @@ export default function AdminPayments() {
                   {payments.map((p) => (
                     <tr key={p._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{new Date(p.createdAt).toLocaleDateString()}</td>
-                      <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">{p.user?.name || 'N/A'}</td>
+                      <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">{p.user?.firstName || p.user?.name || 'N/A'} {p.user?.lastName || ''}</td>
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{p.user?.email || 'N/A'}</td>
                       <td className="p-4 text-sm font-bold text-gray-900 dark:text-white">₦{(p.amount || 0).toLocaleString()}</td>
-                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400 capitalize">{p.gateway || p.paymentMethod || 'N/A'}</td>
                       <td className="p-4 text-sm text-gray-500 dark:text-gray-400 font-mono">{p.reference || '-'}</td>
                       <td className="p-4 text-right">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'completed' || p.status === 'successful' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>

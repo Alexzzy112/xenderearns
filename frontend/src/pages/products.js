@@ -3,15 +3,13 @@ import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { productAPI } from '../utils/api';
 import { toast } from 'react-toastify';
-import { FiTrendingUp, FiClock, FiDollarSign } from 'react-icons/fi';
+import { FiTrendingUp, FiClock, FiDollarSign, FiCheck } from 'react-icons/fi';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [userInvestments, setUserInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [purchaseAmount, setPurchaseAmount] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,7 +18,7 @@ export default function Products() {
           productAPI.getProducts(),
           productAPI.getUserInvestments(),
         ]);
-        setProducts(prodRes.data.products || []);
+        setProducts(prodRes.data || []);
         setUserInvestments(investRes.data.investments || []);
       } catch (err) {
         toast.error('Failed to load products');
@@ -32,17 +30,11 @@ export default function Products() {
   }, []);
 
   const handlePurchase = async (product) => {
-    if (!purchaseAmount || Number(purchaseAmount) < product.minAmount) {
-      toast.error(`Minimum investment is ₦${product.minAmount?.toLocaleString()}`);
-      return;
-    }
     setPurchasing(product._id);
     try {
-      const res = await productAPI.purchase(product._id, { amount: Number(purchaseAmount) });
-      toast.success('Investment purchased successfully!');
+      const res = await productAPI.purchase(product._id);
+      toast.success(`Invested ₦${product.investmentAmount.toLocaleString()} successfully!`);
       setUserInvestments([...userInvestments, res.data.investment]);
-      setSelectedProduct(null);
-      setPurchaseAmount('');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Purchase failed');
     } finally {
@@ -65,42 +57,70 @@ export default function Products() {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Investment Products</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Choose a product and start earning daily</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Choose a plan and start earning daily returns</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <div key={product._id} className="card hover:shadow-xl transition-shadow">
-                {product.image && (
-                  <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded-t-xl -mt-6 -mx-6 mb-4" style={{ width: 'calc(100% + 3rem)' }} />
-                )}
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{product.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">{product.description}</p>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiDollarSign className="w-4 h-4 text-indigo-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Min Investment:</span>
-                    <span className="font-bold text-gray-900 dark:text-white">₦{(product.minAmount || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiTrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Daily ROI:</span>
-                    <span className="font-bold text-green-600">{product.dailyROI}%</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiClock className="w-4 h-4 text-blue-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{product.duration} days</span>
+            {products.map((product) => {
+              const dailyEarning = product.investmentAmount * (product.dailyRoi / 100);
+              return (
+                <div key={product._id} className="card hover:shadow-xl transition-shadow overflow-hidden">
+                  {product.image && (
+                    <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                  )}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{product.name}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{product.description}</p>
+
+                    <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Investment Amount</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">₦{product.investmentAmount.toLocaleString()}</p>
+                    </div>
+
+                    <div className="mt-3 p-4 bg-green-50 dark:bg-green-900/30 rounded-xl">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Daily Earnings</p>
+                      <p className="text-2xl font-bold text-green-600">₦{Math.round(dailyEarning).toLocaleString()}<span className="text-sm font-normal text-gray-500">/day</span></p>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiTrendingUp className="w-4 h-4 text-indigo-600" />
+                        <span className="text-gray-600 dark:text-gray-400">Daily ROI:</span>
+                        <span className="font-bold text-indigo-600">{product.dailyRoi}%</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiClock className="w-4 h-4 text-blue-600" />
+                        <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{product.duration} days</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiDollarSign className="w-4 h-4 text-green-600" />
+                        <span className="text-gray-600 dark:text-gray-400">Total Return:</span>
+                        <span className="font-bold text-green-600">₦{Math.round(product.investmentAmount + dailyEarning * product.duration).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(product)}
+                      disabled={purchasing === product._id}
+                      className="btn-primary w-full mt-4 py-3 flex items-center justify-center gap-2"
+                    >
+                      {purchasing === product._id ? (
+                        'Processing...'
+                      ) : (
+                        <>
+                          <FiCheck className="w-5 h-5" />
+                          Invest ₦{product.investmentAmount.toLocaleString()}
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
-                <button onClick={() => setSelectedProduct(product)} className="btn-primary w-full mt-4 py-2">
-                  Invest Now
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {userInvestments.length > 0 && (
@@ -111,7 +131,7 @@ export default function Products() {
                   <div key={inv._id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                     <h3 className="font-bold text-gray-900 dark:text-white">{inv.product?.name}</h3>
                     <p className="text-sm text-gray-500 mt-1">Amount: ₦{(inv.amount || 0).toLocaleString()}</p>
-                    <p className="text-sm text-green-600">Daily: ₦{(inv.dailyEarning || 0).toLocaleString()}</p>
+                    <p className="text-sm text-green-600 font-bold">Daily: ₦{Math.round(inv.amount * (inv.dailyRoi || 0) / 100).toLocaleString()}</p>
                     <p className="text-sm text-gray-500">{inv.remainingDays || 0} days remaining</p>
                     <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${inv.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
                       {inv.status}
@@ -122,34 +142,6 @@ export default function Products() {
             </div>
           )}
         </div>
-
-        {selectedProduct && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invest in {selectedProduct.name}</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Enter the amount you want to invest</p>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Investment Amount (₦)</label>
-                <input type="number" className="input-field w-full" value={purchaseAmount} onChange={(e) => setPurchaseAmount(e.target.value)} placeholder={`Minimum: ₦${selectedProduct.minAmount?.toLocaleString()}`} min={selectedProduct.minAmount} />
-              </div>
-              <div className="bg-indigo-50 dark:bg-indigo-900/50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Daily ROI: <span className="font-bold text-green-600">{selectedProduct.dailyROI}%</span></p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Duration: <span className="font-bold">{selectedProduct.duration} days</span></p>
-                {purchaseAmount && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Daily earning: <span className="font-bold text-green-600">₦{(Number(purchaseAmount) * selectedProduct.dailyROI / 100).toLocaleString()}</span>
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => { setSelectedProduct(null); setPurchaseAmount(''); }} className="btn-secondary flex-1 py-2">Cancel</button>
-                <button onClick={() => handlePurchase(selectedProduct)} disabled={purchasing === selectedProduct._id} className="btn-primary flex-1 py-2">
-                  {purchasing === selectedProduct._id ? 'Processing...' : 'Confirm Investment'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </Layout>
     </ProtectedRoute>
   );

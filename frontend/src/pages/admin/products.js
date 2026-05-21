@@ -9,14 +9,14 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', description: '', amount: '', minAmount: '', dailyROI: 30, duration: 30 });
+  const [form, setForm] = useState({ name: '', description: '', investmentAmount: '', dailyRoi: 13.89, duration: 30 });
   const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await productAPI.getProducts();
-        setProducts(res.data.products || []);
+        setProducts(res.data || []);
       } catch (err) {
         toast.error('Failed to load products');
       } finally {
@@ -28,14 +28,14 @@ export default function AdminProducts() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', description: '', amount: '', minAmount: '', dailyROI: 30, duration: 30 });
+    setForm({ name: '', description: '', investmentAmount: '', dailyRoi: 13.89, duration: 30 });
     setImageFile(null);
     setShowForm(true);
   };
 
   const openEdit = (product) => {
     setEditing(product._id);
-    setForm({ name: product.name || '', description: product.description || '', amount: product.amount || '', minAmount: product.minAmount || '', dailyROI: product.dailyROI || 30, duration: product.duration || 30 });
+    setForm({ name: product.name || '', description: product.description || '', investmentAmount: product.investmentAmount || '', dailyRoi: product.dailyRoi || 13.89, duration: product.duration || 30 });
     setImageFile(null);
     setShowForm(true);
   };
@@ -101,9 +101,8 @@ export default function AdminProducts() {
                 <thead>
                   <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                     <th className="p-4 font-medium">Product</th>
-                    <th className="p-4 font-medium">Amount</th>
-                    <th className="p-4 font-medium">Min Amount</th>
-                    <th className="p-4 font-medium">Daily ROI</th>
+                      <th className="p-4 font-medium">Amount</th>
+                        <th className="p-4 font-medium">Daily ROI</th>
                     <th className="p-4 font-medium">Duration</th>
                     <th className="p-4 font-medium">Investors</th>
                     <th className="p-4 font-medium text-right">Actions</th>
@@ -118,9 +117,8 @@ export default function AdminProducts() {
                           <span className="font-medium text-gray-900 dark:text-white">{p.name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-sm font-bold text-gray-900 dark:text-white">₦{(p.amount || 0).toLocaleString()}</td>
-                      <td className="p-4 text-sm text-gray-600 dark:text-gray-400">₦{(p.minAmount || 0).toLocaleString()}</td>
-                      <td className="p-4 text-sm font-bold text-green-600">{p.dailyROI}%</td>
+                      <td className="p-4 text-sm font-bold text-gray-900 dark:text-white">₦{(p.investmentAmount || 0).toLocaleString()}</td>
+                        <td className="p-4 text-sm font-bold text-green-600">{p.dailyRoi}%</td>
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{p.duration} days</td>
                       <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{p.investorCount || 0}</td>
                       <td className="p-4 text-right">
@@ -154,20 +152,14 @@ export default function AdminProducts() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                   <textarea className="input-field w-full" rows="3" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required></textarea>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount (₦)</label>
-                    <input type="number" className="input-field w-full" value={form.amount} onChange={(e) => setForm({...form, amount: e.target.value})} required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Min Amount (₦)</label>
-                    <input type="number" className="input-field w-full" value={form.minAmount} onChange={(e) => setForm({...form, minAmount: e.target.value})} required />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Daily ROI (%)</label>
-                    <input type="number" className="input-field w-full" value={form.dailyROI} onChange={(e) => setForm({...form, dailyROI: Number(e.target.value)})} required />
+                <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Investment Amount (₦)</label>
+                      <input type="number" className="input-field w-full" value={form.investmentAmount} onChange={(e) => setForm({...form, investmentAmount: e.target.value})} required />
+                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Daily ROI (%)</label>
+                      <input type="number" step="0.01" className="input-field w-full" value={form.dailyRoi} onChange={(e) => setForm({...form, dailyRoi: Number(e.target.value)})} required />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (days)</label>

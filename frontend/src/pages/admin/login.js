@@ -12,7 +12,7 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await adminAPI.login(form.email, form.password);
+      const res = await adminAPI.login({ email: form.email, password: form.password });
       localStorage.setItem('adminToken', res.data.token);
       toast.success('Admin login successful');
       router.push('/admin/dashboard');

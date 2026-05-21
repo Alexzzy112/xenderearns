@@ -4,15 +4,12 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { userAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiUser, FiMail, FiPhone, FiCamera } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone } from 'react-icons/fi';
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
-  const [kycStatus, setKycStatus] = useState(null);
-  const [kycFile, setKycFile] = useState(null);
-
   useEffect(() => {
     if (user) {
       setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
@@ -29,20 +26,6 @@ export default function Profile() {
       toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleKycUpload = async (e) => {
-    e.preventDefault();
-    if (!kycFile) return;
-    const formData = new FormData();
-    formData.append('document', kycFile);
-    try {
-      await userAPI.uploadKyc(formData);
-      toast.success('KYC document submitted for verification');
-      setKycFile(null);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Upload failed');
     }
   };
 
@@ -84,25 +67,6 @@ export default function Profile() {
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </form>
-            </div>
-
-            <div className="card mb-8">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">KYC Verification</h2>
-              {user?.kycStatus === 'verified' ? (
-                <div className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 p-4 rounded-lg">
-                  Your KYC has been verified
-                </div>
-              ) : user?.kycStatus === 'pending' ? (
-                <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 p-4 rounded-lg">
-                  Your KYC document is being reviewed
-                </div>
-              ) : (
-                <form onSubmit={handleKycUpload} className="space-y-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Upload a valid ID document for verification</p>
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => setKycFile(e.target.files[0])} className="input-field w-full" required />
-                  <button type="submit" className="btn-primary py-2 px-6">Upload Document</button>
-                </form>
-              )}
             </div>
           </div>
         </div>

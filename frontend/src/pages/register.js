@@ -25,6 +25,10 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       toast.error('Passwords do not match');
       return;

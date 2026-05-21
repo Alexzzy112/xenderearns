@@ -72,7 +72,6 @@ export default function AdminUsers() {
                     <th className="p-4 font-medium">Invested</th>
                     <th className="p-4 font-medium">Earnings</th>
                     <th className="p-4 font-medium">Status</th>
-                    <th className="p-4 font-medium">KYC</th>
                     <th className="p-4 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
@@ -87,11 +86,6 @@ export default function AdminUsers() {
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                           {u.status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700' : u.kycStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {u.kycStatus || 'none'}
                         </span>
                       </td>
                       <td className="p-4 text-right">

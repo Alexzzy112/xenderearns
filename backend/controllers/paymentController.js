@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
+const { sendEmail } = require('../services/emailService');
 
 exports.initializeDeposit = async (req, res) => {
   try {
@@ -77,11 +78,15 @@ exports.verifyDeposit = async (req, res) => {
         req.io.to(`user-${user._id}`).emit('wallet-update', { wallet: populatedWallet });
       }
 
-      await sendEmail({
-        to: user.email,
-        subject: 'Deposit Successful - Xender Earnings',
-        html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
-      });
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: 'Deposit Successful - Xender Earnings',
+          html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
+        });
+      } catch (emailErr) {
+        console.error('Failed to send deposit email:', emailErr.message);
+      }
 
       res.json({ message: 'Payment verified', status: 'completed', wallet: populatedWallet });
     } else {
@@ -119,11 +124,15 @@ exports.paystackWebhook = async (req, res) => {
 
         const user = await User.findById(transaction.user);
         if (user) {
-          await sendEmail({
-            to: user.email,
-            subject: 'Deposit Successful - Xender Earnings',
-            html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
-          });
+          try {
+            await sendEmail({
+              to: user.email,
+              subject: 'Deposit Successful - Xender Earnings',
+              html: `<p>₦${amount.toLocaleString()} has been credited to your wallet.</p>`
+            });
+          } catch (emailErr) {
+            console.error('Failed to send deposit email:', emailErr.message);
+          }
         }
       }
     }

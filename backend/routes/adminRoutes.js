@@ -3,7 +3,6 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const productController = require('../controllers/productController');
 const withdrawalController = require('../controllers/withdrawalController');
-const userController = require('../controllers/userController');
 const { adminProtect } = require('../middlewares/adminAuth');
 const { upload } = require('../utils/upload');
 
@@ -25,6 +24,5 @@ router.get('/withdrawals', withdrawalController.getAllWithdrawals);
 router.put('/withdrawals/:id/approve', withdrawalController.approveWithdrawal);
 router.put('/withdrawals/:id/reject', withdrawalController.rejectWithdrawal);
 
-router.put('/kyc/verify', userController.verifyKyc);
 
 module.exports = router;
