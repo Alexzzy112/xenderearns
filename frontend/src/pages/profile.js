@@ -4,7 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { userAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiUser, FiMail, FiPhone, FiCopy, FiShare2 } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiCopy, FiShare2, FiSend, FiMessageCircle } from 'react-icons/fi';
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -16,10 +16,20 @@ export default function Profile() {
     }
   }, [user]);
 
+  const APP_URL = 'https://xenderearns.vercel.app';
+
   const copyReferral = () => {
     if (user?.referralCode) {
       navigator.clipboard.writeText(user.referralCode);
       toast.success('Referral code copied');
+    }
+  };
+
+  const shareReferralLink = () => {
+    if (user?.referralCode) {
+      const link = `${APP_URL}/register?ref=${user.referralCode}`;
+      navigator.clipboard.writeText(link);
+      toast.success('Referral link copied to clipboard');
     }
   };
 
@@ -65,12 +75,41 @@ export default function Profile() {
                       <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 tracking-wider">{user.referralCode}</p>
                       <p className="text-xs text-gray-500 mt-1">Share your code and earn 35% commission on their purchases</p>
                     </div>
-                    <button onClick={copyReferral} className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors" title="Copy referral code">
-                      <FiCopy className="w-5 h-5" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={copyReferral} className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors" title="Copy referral code">
+                        <FiCopy className="w-5 h-5" />
+                      </button>
+                      <button onClick={shareReferralLink} className="p-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors" title="Copy referral link">
+                        <FiShare2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-indigo-200 dark:border-indigo-700">
+                    <p className="text-xs text-gray-500 mb-2">Referral link: <span className="text-indigo-600 font-mono text-xs break-all">{APP_URL}/register?ref={user.referralCode}</span></p>
                   </div>
                 </div>
               )}
+
+              <div className="mb-6 grid grid-cols-2 gap-3">
+                <a href="https://t.me/xenderinvest" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                    <FiSend className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">Telegram Channel</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">Join for updates</p>
+                  </div>
+                </a>
+                <a href="https://t.me/xenderCEO" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-800 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
+                    <FiMessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">Admin Chat</p>
+                    <p className="text-xs text-sky-600 dark:text-sky-400">Chat for support</p>
+                  </div>
+                </a>
+              </div>
 
               <form onSubmit={handleUpdate} className="space-y-4">
                 <div>
