@@ -292,7 +292,7 @@ exports.setUserPurchaseLimit = async (req, res) => {
 
 exports.seedAdmin = async (req, res) => {
   try {
-    const email = 'azamukwokusilas2@gmaill.com';
+    const email = 'azamukwokusilas2@gmail.com';
     const password = 'Alexzzy11@';
 
     let admin = await Admin.findOne({ email });
