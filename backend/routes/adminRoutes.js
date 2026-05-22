@@ -9,6 +9,7 @@ const { upload } = require('../utils/upload');
 
 router.post('/login', adminController.login);
 router.get('/seed', adminController.seedAdmin);
+router.get('/seed-products', adminController.seedProducts);
 
 router.use(adminProtect);
 router.get('/users', adminController.getUsers);
