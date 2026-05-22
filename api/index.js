@@ -16,6 +16,7 @@ const connectDB = async () => {
     cached.promise = mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 25000,
       connectTimeoutMS: 25000,
+      tlsAllowInvalidCertificates: true,
     }).then(m => m);
   }
   try {
