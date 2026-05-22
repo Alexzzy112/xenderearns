@@ -19,7 +19,11 @@ export default function Login() {
       toast.success('Login successful!');
       router.push('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        toast.error('Request timed out. Server may be waking up, please try again.');
+      } else {
+        toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
