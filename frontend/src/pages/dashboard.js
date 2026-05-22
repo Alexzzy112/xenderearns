@@ -5,7 +5,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import StatsCard from '../components/StatsCard';
 import { userAPI, earningAPI, productAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { FiDollarSign, FiTrendingUp, FiBriefcase, FiArrowUpRight, FiClock } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiBriefcase, FiArrowUpRight, FiClock, FiCopy, FiShare2, FiSend, FiMessageCircle } from 'react-icons/fi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-toastify';
 
@@ -80,6 +80,34 @@ export default function Dashboard() {
             <StatsCard icon={<FiTrendingUp className="w-6 h-6" />} label="Total Earnings" value={`₦${(dashboard?.wallet?.totalEarnings || 0).toLocaleString()}`} color="green" />
             <StatsCard icon={<FiArrowUpRight className="w-6 h-6" />} label="Active Investments" value={dashboard?.activeInvestments || 0} color="yellow" />
           </div>
+
+          {user?.referralCode && (
+            <div className="mb-8 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Your Referral Code</p>
+                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 tracking-wider">{user.referralCode}</p>
+                  <p className="text-xs text-gray-500 mt-1">Share your link and earn 35% commission on their purchases</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => { navigator.clipboard.writeText(user.referralCode); toast.success('Referral code copied'); }} className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors" title="Copy referral code">
+                    <FiCopy className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => { if (typeof window !== 'undefined') { const link = `${window.location.origin}/register?ref=${user.referralCode}`; navigator.clipboard.writeText(link); toast.success('Referral link copied'); } }} className="p-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors" title="Copy referral link">
+                    <FiShare2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-indigo-200 dark:border-indigo-700 flex gap-3">
+                <a href="https://t.me/xenderinvest" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-sm rounded-xl hover:bg-blue-600 transition-colors">
+                  <FiSend className="w-4 h-4" /> Telegram Channel
+                </a>
+                <a href="https://t.me/xenderCEO" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white text-sm rounded-xl hover:bg-sky-600 transition-colors">
+                  <FiMessageCircle className="w-4 h-4" /> Admin Chat
+                </a>
+              </div>
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-2 gap-8 mb-8">
             <div className="card">
