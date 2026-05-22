@@ -16,7 +16,10 @@ if (!cached) cached = global._mongoCache = { conn: null, promise: null };
 const connectDB = async () => {
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGODB_URI).then(m => m);
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
+    }).then(m => m);
   }
   cached.conn = await cached.promise;
   return cached.conn;
@@ -26,18 +29,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', env: process.env.ENV || 'not set', mongo: !!mongoose.connection.readyState, mongoUri: (process.env.MONGODB_URI || '').substring(0, 20) });
+});
+
 app.use(async (req, res, next) => {
   try {
     await connectDB();
   } catch (e) {
-    return res.status(500).json({ message: 'Database connection failed' });
+    console.error('DB connect error:', e.message);
+    return res.status(500).json({ message: 'Database connection failed: ' + e.message });
   }
   req.io = { to: () => ({ emit: () => {} }) };
   next();
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', env: process.env.ENV, mongo: !!mongoose.connection.readyState });
 });
 
 app.use('/api/auth', require('../backend/routes/authRoutes'));
