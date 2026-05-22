@@ -169,17 +169,4 @@ exports.rejectWithdrawal = async (req, res) => {
   }
 };
 
-exports.getAllWithdrawals = async (req, res) => {
-  try {
-    const { status } = req.query;
-    const filter = {};
-    if (status) filter.status = status;
 
-    const withdrawals = await Withdrawal.find(filter)
-      .populate('user', 'firstName lastName email')
-      .sort({ createdAt: -1 });
-    res.json(withdrawals);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};

@@ -19,8 +19,8 @@ export default function Deposit() {
     setLoading(true);
     try {
       const res = await paymentAPI.initializeDeposit({ amount: Number(amount) });
-      setPaymentInfo({ reference: res.data.reference, bankDetails: res.data.bankDetails });
-      toast.success('Deposit request created. Transfer to the account below.');
+      setPaymentInfo({ reference: res.data.reference, bankDetails: res.data.bankDetails, amount: Number(amount) });
+      toast.success('Transfer to the account below to fund your wallet.');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to process deposit');
     } finally {
@@ -39,7 +39,7 @@ export default function Deposit() {
   const handleVerifyPayment = async () => {
     setVerifying(true);
     try {
-      const res = await paymentAPI.verifyDeposit(paymentInfo.reference);
+      const res = await paymentAPI.verifyDeposit(paymentInfo.reference, paymentInfo.amount);
       if (res.data.status === 'completed') {
         setVerified(true);
         toast.success('Payment confirmed! Your wallet has been credited.');

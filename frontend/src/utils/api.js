@@ -60,7 +60,7 @@ export const walletAPI = {
 
 export const paymentAPI = {
   initializeDeposit: (data) => api.post('/payments/initialize', data),
-  verifyDeposit: (reference) => api.post('/payments/verify', { reference }),
+  verifyDeposit: (reference, amount) => api.post('/payments/verify', { reference, amount }),
   createVirtualAccount: () => api.post('/payments/virtual-account'),
 };
 

@@ -18,15 +18,6 @@ exports.initializeDeposit = async (req, res) => {
 
     const reference = `DEP-${Date.now()}-${req.user._id}`;
 
-    await Transaction.create({
-      user: req.user._id,
-      type: 'deposit',
-      amount,
-      status: 'pending',
-      reference,
-      description: 'Wallet deposit via bank transfer'
-    });
-
     res.json({ reference, bankDetails: BANK_DETAILS });
   } catch (error) {
     console.error('Deposit init error:', error.message);
@@ -74,9 +65,23 @@ exports.confirmDeposit = async (req, res) => {
 
 exports.verifyDeposit = async (req, res) => {
   try {
-    const { reference } = req.body;
-    const transaction = await Transaction.findOne({ reference });
-    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    const { reference, amount } = req.body;
+    let transaction = await Transaction.findOne({ reference });
+
+    if (!transaction) {
+      if (!amount || amount < 100) {
+        return res.status(400).json({ message: 'Minimum deposit is ₦100' });
+      }
+
+      transaction = await Transaction.create({
+        user: req.user._id,
+        type: 'deposit',
+        amount,
+        status: 'pending',
+        reference,
+        description: 'Wallet deposit via bank transfer'
+      });
+    }
 
     const wallet = await Wallet.findOne({ user: transaction.user });
 
