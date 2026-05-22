@@ -36,6 +36,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', env: process.env.ENV, mongo: !!mongoose.connection.readyState });
+});
+
 app.use('/api/auth', require('../backend/routes/authRoutes'));
 app.use('/api/products', require('../backend/routes/productRoutes'));
 app.use('/api/payments', require('../backend/routes/paymentRoutes'));
@@ -44,5 +48,10 @@ app.use('/api/withdrawals', require('../backend/routes/withdrawalRoutes'));
 app.use('/api/earnings', require('../backend/routes/earningRoutes'));
 app.use('/api/admin', require('../backend/routes/adminRoutes'));
 app.use('/api/users', require('../backend/routes/userRoutes'));
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err?.message || err);
+  res.status(500).json({ message: err?.message || 'Internal server error' });
+});
 
 module.exports = app;
