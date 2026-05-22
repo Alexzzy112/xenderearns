@@ -4,7 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { userAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiUser, FiMail, FiPhone } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiCopy, FiShare2 } from 'react-icons/fi';
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -15,6 +15,13 @@ export default function Profile() {
       setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
     }
   }, [user]);
+
+  const copyReferral = () => {
+    if (user?.referralCode) {
+      navigator.clipboard.writeText(user.referralCode);
+      toast.success('Referral code copied');
+    }
+  };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -49,6 +56,21 @@ export default function Profile() {
                   <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
                 </div>
               </div>
+
+              {user?.referralCode && (
+                <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Your Referral Code</p>
+                      <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 tracking-wider">{user.referralCode}</p>
+                      <p className="text-xs text-gray-500 mt-1">Share your code and earn 35% commission on their purchases</p>
+                    </div>
+                    <button onClick={copyReferral} className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors" title="Copy referral code">
+                      <FiCopy className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleUpdate} className="space-y-4">
                 <div>

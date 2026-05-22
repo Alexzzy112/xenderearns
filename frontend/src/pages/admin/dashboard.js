@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX, FiSliders } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX, FiSliders, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -13,6 +13,15 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('');
   const [limitValue, setLimitValue] = useState(0);
+  const [showDelUserModal, setShowDelUserModal] = useState(false);
+  const [showDelPayModal, setShowDelPayModal] = useState(false);
+  const [showRevWdModal, setShowRevWdModal] = useState(false);
+  const [delUserId, setDelUserId] = useState('');
+  const [delPayId, setDelPayId] = useState('');
+  const [revWdId, setRevWdId] = useState('');
+  const [allPayments, setAllPayments] = useState([]);
+  const [allWithdrawals, setAllWithdrawals] = useState([]);
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -79,6 +88,82 @@ export default function AdminDashboard() {
       setShowLimitModal(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update limit');
+    }
+  };
+
+  const openDelUserModal = async () => {
+    try {
+      const res = await adminAPI.getUsers({ page: 1, limit: 200 });
+      setUsers(res.data.users || []);
+    } catch (err) {
+      toast.error('Failed to load users');
+    }
+    setDelUserId('');
+    setShowDelUserModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!delUserId) return toast.error('Select a user');
+    setDeleting('user');
+    try {
+      await adminAPI.deleteUser(delUserId);
+      toast.success('User deleted');
+      setShowDelUserModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const openDelPayModal = async () => {
+    try {
+      const res = await adminAPI.getPayments({});
+      setAllPayments(res.data.payments || []);
+    } catch (err) {
+      toast.error('Failed to load payments');
+    }
+    setDelPayId('');
+    setShowDelPayModal(true);
+  };
+
+  const handleDeletePayment = async () => {
+    if (!delPayId) return toast.error('Select a payment');
+    setDeleting('payment');
+    try {
+      await adminAPI.deletePayment(delPayId);
+      toast.success('Payment deleted');
+      setShowDelPayModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete payment');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const openRevWdModal = async () => {
+    try {
+      const res = await adminAPI.getWithdrawals({});
+      setAllWithdrawals(res.data.withdrawals || []);
+    } catch (err) {
+      toast.error('Failed to load withdrawals');
+    }
+    setRevWdId('');
+    setShowRevWdModal(true);
+  };
+
+  const handleReverseWithdrawal = async () => {
+    if (!revWdId) return toast.error('Select a withdrawal');
+    if (!confirm('Reverse this approved withdrawal? Funds will be returned to the user.')) return;
+    setDeleting('withdrawal');
+    try {
+      await adminAPI.reverseWithdrawal(revWdId);
+      toast.success('Withdrawal reversed and funds returned');
+      setShowRevWdModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reverse withdrawal');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -200,6 +285,18 @@ export default function AdminDashboard() {
                 <FiSliders className="w-6 h-6 text-purple-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">Purchase Limit</span>
               </button>
+              <button onClick={openDelUserModal} className="p-4 bg-red-50 dark:bg-red-900/50 rounded-xl text-center hover:shadow-md transition-shadow">
+                <FiTrash2 className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">Delete User</span>
+              </button>
+              <button onClick={openDelPayModal} className="p-4 bg-red-50 dark:bg-red-900/50 rounded-xl text-center hover:shadow-md transition-shadow">
+                <FiTrash2 className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">Delete Payment</span>
+              </button>
+              <button onClick={openRevWdModal} className="p-4 bg-orange-50 dark:bg-orange-900/50 rounded-xl text-center hover:shadow-md transition-shadow">
+                <FiRefreshCw className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">Reverse Withdrawal</span>
+              </button>
             </div>
           </div>
         </div>
@@ -311,6 +408,100 @@ export default function AdminDashboard() {
                 </button>
                 <button onClick={handleSetLimit} className="flex-1 py-2.5 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                   Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDelUserModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDelUserModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete User</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select User</label>
+                <select className="input-field" value={delUserId} onChange={e => setDelUserId(e.target.value)}>
+                  <option value="">Select a user</option>
+                  {users.map(u => (
+                    <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/50 p-3 rounded-lg">
+                This will permanently delete the user and all their data (wallet, investments, transactions, withdrawals). This cannot be undone.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowDelUserModal(false)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleDeleteUser} disabled={!delUserId || deleting === 'user'} className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors">
+                  {deleting === 'user' ? 'Deleting...' : 'Delete User'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDelPayModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDelPayModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Payment</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Payment</label>
+                <select className="input-field" value={delPayId} onChange={e => setDelPayId(e.target.value)}>
+                  <option value="">Select a payment</option>
+                  {allPayments.map(p => (
+                    <option key={p._id} value={p._id}>
+                      {p.user?.firstName || p.user?.name || 'N/A'} - ₦{(p.amount || 0).toLocaleString()} - {p.reference ? p.reference.slice(0, 12) : 'N/A'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/50 p-3 rounded-lg">
+                This will permanently delete this payment record. This cannot be undone.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowDelPayModal(false)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleDeletePayment} disabled={!delPayId || deleting === 'payment'} className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors">
+                  {deleting === 'payment' ? 'Deleting...' : 'Delete Payment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRevWdModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowRevWdModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Reverse Withdrawal</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Withdrawal</label>
+                <select className="input-field" value={revWdId} onChange={e => setRevWdId(e.target.value)}>
+                  <option value="">Select an approved withdrawal</option>
+                  {allWithdrawals.filter(w => w.status === 'approved').map(w => (
+                    <option key={w._id} value={w._id}>
+                      {w.user?.name || w.user?.firstName || 'N/A'} - ₦{(w.amount || 0).toLocaleString()} - {w.bankName || 'N/A'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-sm text-orange-600 bg-orange-50 dark:bg-orange-900/50 p-3 rounded-lg">
+                This will reverse the approved withdrawal and return the funds to the user's wallet.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowRevWdModal(false)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleReverseWithdrawal} disabled={!revWdId || deleting === 'withdrawal'} className="flex-1 py-2.5 px-4 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors">
+                  {deleting === 'withdrawal' ? 'Reversing...' : 'Reverse Withdrawal'}
                 </button>
               </div>
             </div>

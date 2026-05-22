@@ -16,34 +16,34 @@ export default function Contact() {
             <div className="card">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Telegram</h2>
               <div className="space-y-4">
-                <a
-                  href="https://t.me/your_channel"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl hover:shadow-md transition-shadow"
-                >
-                  <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                    <FiSend className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 dark:text-white text-lg">Telegram Channel</p>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">Join our channel for updates, news, and announcements</p>
-                  </div>
-                </a>
-                <a
-                  href="https://t.me/your_admin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded-xl hover:shadow-md transition-shadow"
-                >
-                  <div className="w-14 h-14 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
-                    <FiMessageCircle className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 dark:text-white text-lg">Admin Chat</p>
-                    <p className="text-sm text-sky-600 dark:text-sky-400">Chat directly with the admin for support</p>
-                  </div>
-                </a>
+                  <a
+                    href="https://t.me/xenderinvest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl hover:shadow-md transition-shadow"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                      <FiSend className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg">Telegram Channel</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">Join our channel for updates, news, and announcements</p>
+                    </div>
+                  </a>
+                  <a
+                    href="https://t.me/xenderCEO"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded-xl hover:shadow-md transition-shadow"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
+                      <FiMessageCircle className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg">Admin Chat</p>
+                      <p className="text-sm text-sky-600 dark:text-sky-400">Chat directly with the admin for support</p>
+                    </div>
+                  </a>
               </div>
             </div>
 

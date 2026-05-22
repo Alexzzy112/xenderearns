@@ -36,19 +36,17 @@ exports.register = async (req, res) => {
 
     await Wallet.create({ user: user._id });
 
-    if (referredBy) {
-      const wallet = await Wallet.findOne({ user: user._id });
-      wallet.balance += 1000;
-      await wallet.save();
-      await Transaction.create({
-        user: user._id,
-        type: 'referral_bonus',
-        amount: 1000,
-        status: 'completed',
-        description: 'Welcome referral bonus',
-        reference: `BONUS-${Date.now()}`
-      });
-    }
+    const wallet = await Wallet.findOne({ user: user._id });
+    wallet.balance += 1000;
+    await wallet.save();
+    await Transaction.create({
+      user: user._id,
+      type: 'referral_bonus',
+      amount: 1000,
+      status: 'completed',
+      description: 'Welcome bonus',
+      reference: `BONUS-${Date.now()}`
+    });
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
     user.verificationToken = verificationToken;

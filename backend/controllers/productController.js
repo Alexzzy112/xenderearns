@@ -108,7 +108,7 @@ exports.purchaseProduct = async (req, res) => {
     }
 
     if (user.referredBy) {
-      const commission = Math.round(product.investmentAmount * 0.4);
+      const commission = Math.round(product.investmentAmount * 0.35);
       const referrerWallet = await Wallet.findOne({ user: user.referredBy._id });
       if (referrerWallet) {
         referrerWallet.balance += commission;
@@ -119,7 +119,7 @@ exports.purchaseProduct = async (req, res) => {
           type: 'referral_bonus',
           amount: commission,
           status: 'completed',
-          description: `40% commission from ${user.firstName} ${user.lastName}'s purchase`,
+          description: `35% commission from ${user.firstName} ${user.lastName}'s purchase`,
           reference: `REF-${Date.now()}`
         });
         if (req.io) {
