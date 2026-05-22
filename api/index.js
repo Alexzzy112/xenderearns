@@ -30,7 +30,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', env: process.env.ENV || 'not set', mongo: !!mongoose.connection.readyState, mongoUri: (process.env.MONGODB_URI || '').substring(0, 20) });
+  const uri = process.env.MONGODB_URI || '';
+  res.json({ status: 'ok', env: process.env.ENV || 'not set', mongo: !!mongoose.connection.readyState, mongoUriPrefix: uri.substring(0, 30) + '...' });
 });
 
 app.use(async (req, res, next) => {
