@@ -77,15 +77,29 @@ export const earningAPI = {
 export const adminAPI = {
   login: (data) => api.post('/admin/login', data),
   getStats: () => api.get('/admin/stats'),
-  getUsers: (page) => api.get(`/admin/users?page=${page || 1}`),
+  getUsers: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', params.page);
+    if (params.search) query.set('search', params.search);
+    if (params.limit) query.set('limit', params.limit);
+    return api.get(`/admin/users?${query.toString()}`);
+  },
   toggleUserStatus: (id) => api.put(`/admin/users/${id}/toggle-status`),
   setPurchaseLimit: (userId, maxActiveInvestments) => api.put('/admin/users/purchase-limit', { userId, maxActiveInvestments }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
-  getPayments: () => api.get('/admin/payments'),
+  getPayments: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.status && params.status !== 'all') query.set('status', params.status);
+    return api.get(`/admin/payments?${query.toString()}`);
+  },
   deletePayment: (id) => api.delete(`/admin/payments/${id}`),
   confirmDeposit: (transactionId) => api.put('/admin/payments/confirm', { transactionId }),
   getInvestmentStats: () => api.get('/admin/investment-stats'),
-  getWithdrawals: (status) => api.get(`/admin/withdrawals${status ? `?status=${status}` : ''}`),
+  getWithdrawals: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.status && params.status !== 'all') query.set('status', params.status);
+    return api.get(`/admin/withdrawals?${query.toString()}`);
+  },
   approveWithdrawal: (id) => api.put(`/admin/withdrawals/${id}/approve`),
   rejectWithdrawal: (id, note) => api.put(`/admin/withdrawals/${id}/reject`, { adminNote: note }),
   reverseWithdrawal: (id) => api.put(`/admin/withdrawals/${id}/reverse`),

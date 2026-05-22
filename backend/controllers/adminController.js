@@ -25,29 +25,49 @@ exports.login = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
-    const users = await User.find()
+    const { page = 1, limit = 20, search } = req.query;
+    const query = {};
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+    const users = await User.find(query)
       .select('-password -verificationToken -resetPasswordToken')
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
 
     const userIds = users.map(u => u._id);
-    const investmentCounts = await UserInvestment.aggregate([
-      { $match: { user: { $in: userIds } } },
-      { $group: { _id: '$user', total: { $sum: 1 }, active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } } } }
+    const [investmentCounts, walletData] = await Promise.all([
+      UserInvestment.aggregate([
+        { $match: { user: { $in: userIds } } },
+        { $group: { _id: '$user', total: { $sum: 1 }, active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } } } }
+      ]),
+      Wallet.find({ user: { $in: userIds } }).select('user totalInvested totalEarnings')
     ]);
+
     const countMap = {};
     investmentCounts.forEach(c => { countMap[c._id.toString()] = { total: c.total, active: c.active }; });
+    const walletMap = {};
+    walletData.forEach(w => { walletMap[w.user.toString()] = w; });
+
     const usersWithCounts = users.map(u => ({
       ...u.toObject(),
+      name: `${u.firstName} ${u.lastName}`,
+      status: u.isActive ? 'active' : 'suspended',
       totalPurchased: countMap[u._id.toString()]?.total || 0,
       activePurchased: countMap[u._id.toString()]?.active || 0,
+      totalInvested: walletMap[u._id.toString()]?.totalInvested || 0,
+      totalEarnings: walletMap[u._id.toString()]?.totalEarnings || 0,
     }));
 
-    const total = await User.countDocuments();
+    const total = await User.countDocuments(query);
     res.json({ users: usersWithCounts, total, page: parseInt(page), pages: Math.ceil(total / limit) });
   } catch (error) {
+    console.error('Get users error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -183,12 +203,34 @@ exports.reverseWithdrawal = async (req, res) => {
 
 exports.getInvestmentStats = async (req, res) => {
   try {
+    const [totalInvested, totalEarnings, activeProducts, roiData] = await Promise.all([
+      UserInvestment.aggregate([
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      Wallet.aggregate([
+        { $group: { _id: null, total: { $sum: '$totalEarnings' } } }
+      ]),
+      InvestmentProduct.countDocuments({ isActive: true }),
+      InvestmentProduct.aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: null, avg: { $avg: '$dailyRoi' } } }
+      ])
+    ]);
+
     const investments = await UserInvestment.find()
       .populate('user', 'firstName lastName email')
       .populate('product', 'name')
       .sort({ createdAt: -1 });
-    res.json(investments);
+
+    res.json({
+      investments,
+      totalInvested: totalInvested[0]?.total || 0,
+      totalROIPaid: totalEarnings[0]?.total || 0,
+      activeProducts,
+      avgDailyROI: roiData[0]?.avg ? Math.round(roiData[0].avg * 100) / 100 : 0,
+    });
   } catch (error) {
+    console.error('Investment stats error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
