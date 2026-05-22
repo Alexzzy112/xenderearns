@@ -8,5 +8,4 @@ backend/.env
 *.log
 .DS_Store
 .vercel
-
-.vercel
+.env.vercel
