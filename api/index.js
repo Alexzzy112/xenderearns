@@ -50,7 +50,7 @@ app.get('/api/health', async (req, res) => {
     mongo,
     mongoUriPrefix: uri.substring(0, 30) + '...'
   };
-  if (dbError && process.env.ENV !== 'PRODUCTION') payload.dbError = dbError;
+  if (dbError) payload.dbError = dbError;
 
   res.json(payload);
 });
