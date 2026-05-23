@@ -31,28 +31,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', (req, res) => {
   const uri = process.env.MONGODB_URI || '';
-  let mongo = 'disconnected';
-  let dbError = null;
-
-  try {
-    await connectDB();
-    mongo = mongoose.connection.readyState === 1 ? 'connected' : 'connecting';
-  } catch (e) {
-    dbError = e.message;
-    console.error('Health DB error:', e.message);
-  }
-
-  const payload = {
-    status: 'ok',
-    env: process.env.ENV || 'not set',
-    mongo,
-    mongoUriPrefix: uri.substring(0, 30) + '...'
-  };
-  if (dbError) payload.dbError = dbError;
-
-  res.json(payload);
+  res.json({ status: 'ok', env: process.env.ENV || 'not set', mongo: !!mongoose.connection.readyState, mongoUriPrefix: uri.substring(0, 30) + '...' });
 });
 
 app.use(async (req, res, next) => {
@@ -60,10 +41,7 @@ app.use(async (req, res, next) => {
     await connectDB();
   } catch (e) {
     console.error('DB connect error:', e.message);
-    const isProd = process.env.ENV === 'PRODUCTION';
-    return res.status(500).json({ 
-      message: isProd ? 'Database connection failed' : 'Database connection failed: ' + e.message 
-    });
+    return res.status(500).json({ message: 'Database connection failed: ' + e.message });
   }
   req.io = { to: () => ({ emit: () => {} }) };
   next();
