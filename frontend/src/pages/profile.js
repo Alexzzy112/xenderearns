@@ -4,7 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { userAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiUser, FiMail, FiPhone, FiCopy, FiShare2, FiSend } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiCopy, FiShare2, FiSend, FiMessageCircle } from 'react-icons/fi';
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -90,15 +90,26 @@ export default function Profile() {
                 </div>
               )}
 
-              <a href="https://t.me/xenderinvest" target="_blank" rel="noopener noreferrer" className="mb-6 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                  <FiSend className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">Telegram Channel</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">Join for updates</p>
-                </div>
-              </a>
+              <div className="mb-6 grid grid-cols-2 gap-3">
+                <a href="https://t.me/xenderinvest" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                    <FiSend className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">Telegram Channel</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">Join for updates</p>
+                  </div>
+                </a>
+                <a href="https://t.me/xenderCEO" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-800 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
+                    <FiMessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">Admin Chat</p>
+                    <p className="text-xs text-sky-600 dark:text-sky-400">Chat for support</p>
+                  </div>
+                </a>
+              </div>
 
               <form onSubmit={handleUpdate} className="space-y-4">
                 <div>

@@ -292,130 +292,17 @@ exports.setUserPurchaseLimit = async (req, res) => {
 
 exports.seedAdmin = async (req, res) => {
   try {
-    const email = 'azamukwokusilas2@gmail.com';
-    const password = 'Alexzzy11@';
+    const existing = await Admin.findOne({ email: 'admin@xender.com' });
+    if (existing) return res.json({ message: 'Admin already exists' });
 
-    let admin = await Admin.findOne({ email });
-    if (admin) {
-      admin.name = 'Super Admin';
-      admin.password = password;
-      admin.role = 'superadmin';
-      await admin.save();
-      return res.json({ message: `Admin updated. Email: ${email}, Password: ${password}` });
-    }
-
-    admin = await Admin.create({
+    await Admin.create({
       name: 'Super Admin',
-      email,
-      password,
+      email: 'admin@xender.com',
+      password: 'admin123',
       role: 'superadmin',
     });
-    res.json({ message: `Admin created. Email: ${email}, Password: ${password}` });
+    res.json({ message: 'Admin created. Email: admin@xender.com, Password: admin123' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.seedProducts = async (req, res) => {
-  try {
-    const products = [
-      {
-        name: 'Starter Plan',
-        image: 'https://picsum.photos/seed/starter/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 3600,
-        dailyRoi: 13.8889,
-        duration: 30,
-      },
-      {
-        name: 'Basic Plan',
-        image: 'https://picsum.photos/seed/basic/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 8000,
-        dailyRoi: 13.875,
-        duration: 30,
-      },
-      {
-        name: 'Standard Plan',
-        image: 'https://picsum.photos/seed/standard/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 12000,
-        dailyRoi: 13.8333,
-        duration: 30,
-      },
-      {
-        name: 'Growth Plan',
-        image: 'https://picsum.photos/seed/growth/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 15000,
-        dailyRoi: 13.8667,
-        duration: 30,
-      },
-      {
-        name: 'Advanced Plan',
-        image: 'https://picsum.photos/seed/advanced/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 30000,
-        dailyRoi: 13.8667,
-        duration: 30,
-      },
-      {
-        name: 'Premium Plan',
-        image: 'https://picsum.photos/seed/premium/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 50000,
-        dailyRoi: 13.88,
-        duration: 30,
-      },
-      {
-        name: 'Elite Plan',
-        image: 'https://picsum.photos/seed/elite/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 80000,
-        dailyRoi: 13.8875,
-        duration: 30,
-      },
-      {
-        name: 'VIP Plan',
-        image: 'https://picsum.photos/seed/vip/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 100000,
-        dailyRoi: 13.88,
-        duration: 30,
-      },
-      {
-        name: 'Platinum Plan',
-        image: 'https://picsum.photos/seed/platinum/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 500000,
-        dailyRoi: 13.888,
-        duration: 30,
-      },
-      {
-        name: 'Diamond Plan',
-        image: 'https://picsum.photos/seed/diamond/400/400',
-        description: 'Guaranteed daily returns for 30 days',
-        investmentAmount: 1000000,
-        dailyRoi: 13.888,
-        duration: 30,
-      },
-    ];
-
-    await InvestmentProduct.deleteMany({});
-    const created = await InvestmentProduct.insertMany(products);
-
-    const summary = created.map(p => ({
-      name: p.name,
-      amount: p.investmentAmount,
-      daily: Math.round(p.investmentAmount * (p.dailyRoi / 100))
-    }));
-
-    res.json({ 
-      message: `Seeded ${created.length} investment products successfully`,
-      products: summary
-    });
-  } catch (error) {
-    console.error('Seed products error:', error);
-    res.status(500).json({ message: 'Server error seeding products' });
   }
 };
