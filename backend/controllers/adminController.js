@@ -292,16 +292,19 @@ exports.setUserPurchaseLimit = async (req, res) => {
 
 exports.seedAdmin = async (req, res) => {
   try {
-    const existing = await Admin.findOne({ email: 'azamukwokusilas2@gmail.com' });
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@xender.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    const existing = await Admin.findOne({ email: adminEmail });
     if (existing) return res.json({ message: 'Admin already exists' });
 
     await Admin.create({
       name: 'Super Admin',
-      email: 'azamukwokusilas2@gmail.com',
-      password: 'Alexzzy11@',
+      email: adminEmail,
+      password: adminPassword,
       role: 'superadmin',
     });
-    res.json({ message: 'Admin created. Email: azamukwokusilas2@gmail.com, Password: Alexzzy11@' });
+    res.json({ message: `Admin created. Email: ${adminEmail}` });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
