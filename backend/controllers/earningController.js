@@ -1,5 +1,6 @@
 const UserInvestment = require('../models/UserInvestment');
 const Earning = require('../models/Earning');
+const { calculateDailyEarnings } = require('../jobs/earningsCron');
 
 exports.getUserEarnings = async (req, res) => {
   try {
@@ -35,5 +36,15 @@ exports.getEarningStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.triggerEarnings = async (req, res) => {
+  try {
+    await calculateDailyEarnings();
+    res.json({ message: 'Earnings calculated successfully' });
+  } catch (error) {
+    console.error('Trigger earnings error:', error);
+    res.status(500).json({ message: 'Failed to calculate earnings' });
   }
 };
