@@ -11,6 +11,7 @@ export default function Document() {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Xender" />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+        <script src="https://pl29589349.effectivecpmnetwork.com/88/61/f0/8861f0ae3988015026e695df2d3ee911.js" />
       </Head>
       <body>
         <Main />
