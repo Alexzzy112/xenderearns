@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FiGrid, FiUsers, FiPackage, FiDollarSign, FiArrowUpRight, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import AdBanner from './AdBanner';
 
 const sidebarLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: <FiGrid /> },
@@ -57,6 +58,7 @@ export default function AdminLayout({ children }) {
         <main className="flex-1 p-6">
           {children}
         </main>
+        <AdBanner />
       </div>
     </div>
   );
