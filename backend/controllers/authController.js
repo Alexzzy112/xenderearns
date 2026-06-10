@@ -6,7 +6,9 @@ const Transaction = require('../models/Transaction');
 const { sendEmail } = require('../services/emailService');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+  const secret = process.env.JWT_SECRET || 'fallback_secret_change_me';
+  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+  return jwt.sign({ id }, secret, { expiresIn });
 };
 
 exports.register = async (req, res) => {
@@ -85,6 +87,9 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });

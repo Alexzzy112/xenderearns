@@ -34,7 +34,12 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  if (!this.password) return false;
+  try {
+    return bcrypt.compare(candidatePassword, this.password);
+  } catch {
+    return false;
+  }
 };
 
 userSchema.methods.generateReferralCode = function () {
