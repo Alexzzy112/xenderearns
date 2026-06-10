@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { adminAPI } from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX, FiSliders, FiTrash2, FiRefreshCw } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiTrendingUp, FiArrowUpRight, FiPackage, FiCreditCard, FiCheck, FiX, FiSliders, FiTrash2, FiRefreshCw, FiImage } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [allPayments, setAllPayments] = useState([]);
   const [allWithdrawals, setAllWithdrawals] = useState([]);
   const [deleting, setDeleting] = useState(null);
+  const [refreshingImages, setRefreshingImages] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -296,6 +297,20 @@ export default function AdminDashboard() {
               <button onClick={openRevWdModal} className="p-4 bg-orange-50 dark:bg-orange-900/50 rounded-xl text-center hover:shadow-md transition-shadow">
                 <FiRefreshCw className="w-6 h-6 text-orange-600 mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">Reverse Withdrawal</span>
+              </button>
+              <button onClick={async () => {
+                setRefreshingImages(true);
+                try {
+                  const res = await adminAPI.refreshImages();
+                  toast.success(res.data.message);
+                } catch (err) {
+                  toast.error(err.response?.data?.message || 'Failed to refresh images');
+                } finally {
+                  setRefreshingImages(false);
+                }
+              }} disabled={refreshingImages} className="p-4 bg-pink-50 dark:bg-pink-900/50 rounded-xl text-center hover:shadow-md transition-shadow disabled:opacity-50">
+                <FiImage className={`w-6 h-6 text-pink-600 mx-auto mb-2 ${refreshingImages ? 'animate-spin' : ''}`} />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{refreshingImages ? 'Refreshing...' : 'Refresh Images'}</span>
               </button>
             </div>
           </div>

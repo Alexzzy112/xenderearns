@@ -110,6 +110,7 @@ export const adminAPI = {
   verifyKyc: (userId, verified) => api.put('/admin/kyc/verify', { userId, verified }),
   getUserInvestments: (userId) => api.get(`/admin/users/${userId}/investments`),
   cancelInvestment: (investmentId) => api.put(`/admin/investments/${investmentId}/cancel`),
+  refreshImages: () => api.post('/admin/refresh-images'),
 };
 
 export const userAPI = {
