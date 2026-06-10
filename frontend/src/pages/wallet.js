@@ -60,7 +60,7 @@ export default function Wallet() {
             <StatsCard icon={<FiDollarSign className="w-6 h-6" />} label="Wallet Balance" value={`₦${(wallet?.balance || 0).toLocaleString()}`} color="indigo" />
             <StatsCard icon={<FiTrendingUp className="w-6 h-6" />} label="Total Earnings" value={`₦${(wallet?.totalEarnings || 0).toLocaleString()}`} color="green" />
             <StatsCard icon={<FiArrowUpRight className="w-6 h-6" />} label="Total Invested" value={`₦${(wallet?.totalInvested || 0).toLocaleString()}`} color="blue" />
-            <StatsCard icon={<FiDollarSign className="w-6 h-6" />} label="Withdrawal Balance" value={`₦${(wallet?.withdrawalBalance || 0).toLocaleString()}`} color="yellow" />
+            <StatsCard icon={<FiDollarSign className="w-6 h-6" />} label="Withdrawal Balance" value={`₦${(wallet?.withdrawableBalance || 0).toLocaleString()}`} color="yellow" />
           </div>
 
           {wallet?.virtualAccount && (
@@ -119,12 +119,12 @@ export default function Wallet() {
                         <td className="py-3 text-sm text-gray-600 dark:text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</td>
                         <td className="py-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{tx.description || tx.type}</td>
                         <td className="py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.type === 'credit' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                             {tx.type}
                           </span>
                         </td>
-                        <td className={`py-3 text-sm font-bold text-right ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                          {tx.type === 'credit' ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
+                        <td className={`py-3 text-sm font-bold text-right ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'text-green-600' : 'text-red-600'}`}>
+                          {['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
                         </td>
                         <td className="py-3 text-right">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.status === 'completed' || tx.status === 'successful' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : tx.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>

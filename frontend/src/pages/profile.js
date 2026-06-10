@@ -8,11 +8,11 @@ import { FiUser, FiMail, FiPhone, FiCopy, FiShare2, FiSend, FiMessageCircle } fr
 
 export default function Profile() {
   const { user, logout } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (user) {
-      setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
+      setForm({ firstName: user.firstName || '', lastName: user.lastName || '', email: user.email || '', phone: user.phone || '' });
     }
   }, [user]);
 
@@ -33,11 +33,13 @@ export default function Profile() {
     }
   };
 
+  const nameDisplay = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await userAPI.updateProfile({ name: form.name, phone: form.phone });
+      await userAPI.updateProfile({ firstName: form.firstName, lastName: form.lastName, phone: form.phone });
       toast.success('Profile updated successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed');
@@ -62,7 +64,7 @@ export default function Profile() {
                   <FiUser className="w-8 h-8 text-indigo-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user?.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{nameDisplay}</h2>
                   <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
                 </div>
               </div>
@@ -112,9 +114,15 @@ export default function Profile() {
               </div>
 
               <form onSubmit={handleUpdate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
-                  <input type="text" className="input-field w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                    <input type="text" className="input-field w-full" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                    <input type="text" className="input-field w-full" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>

@@ -56,7 +56,7 @@ exports.requestWithdrawal = async (req, res) => {
       type: 'withdrawal',
       amount: netAmount,
       status: 'pending',
-      description: `Withdrawal to ${bankName} - ${accountNumber} (30% charge: ₦${charge.toLocaleString()})`,
+      description: `Withdrawal to ${bankName} - ${accountNumber} (20% charge: ₦${charge.toLocaleString()})`,
       reference: `WTH-${Date.now()}`
     });
 

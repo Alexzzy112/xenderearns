@@ -55,7 +55,7 @@ export default function AdminProducts() {
       }
       setShowForm(false);
       const res = await productAPI.getProducts();
-      setProducts(res.data.products || []);
+      setProducts(Array.isArray(res.data) ? res.data : (res.data.products || []));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save product');
     }

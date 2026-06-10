@@ -75,7 +75,7 @@ const calculateDailyEarnings = async () => {
       }
     }
 
-    console.log(`[Earnings Cron] Processed ${processedCount} investments at ${new Date().toISOString()}`);
+    console.log(`[Earnings Cron] Processed ${processedCount} earning days at ${new Date().toISOString()}`);
   } catch (error) {
     console.error('Earnings cron error:', error);
   }

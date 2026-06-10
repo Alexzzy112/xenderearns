@@ -19,7 +19,7 @@ export default function Products() {
           productAPI.getUserInvestments(),
         ]);
         setProducts(prodRes.data || []);
-        setUserInvestments(investRes.data.investments || []);
+        setUserInvestments(Array.isArray(investRes.data) ? investRes.data : (investRes.data.investments || []));
       } catch (err) {
         toast.error('Failed to load products');
       } finally {

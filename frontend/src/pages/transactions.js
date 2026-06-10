@@ -42,7 +42,7 @@ export default function Transactions() {
           <div className="card">
             <div className="flex items-center gap-2 mb-6">
               <FiFilter className="w-5 h-5 text-gray-500" />
-              {['all', 'credit', 'debit'].map((f) => (
+                  {['all', 'deposit', 'withdrawal', 'earning'].map((f) => (
                 <button key={f} onClick={() => { setFilter(f); setPage(1); }} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${filter === f ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
                   {f}
                 </button>
@@ -74,12 +74,12 @@ export default function Transactions() {
                           <td className="py-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{tx.description || tx.type}</td>
                           <td className="py-3 text-sm text-gray-500 dark:text-gray-400">{tx.reference || '-'}</td>
                           <td className="py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.type === 'credit' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
                               {tx.type}
                             </span>
                           </td>
-                          <td className={`py-3 text-sm font-bold text-right ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                            {tx.type === 'credit' ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
+                          <td className={`py-3 text-sm font-bold text-right ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'text-green-600' : 'text-red-600'}`}>
+                            {['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
                           </td>
                           <td className="py-3 text-right">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.status === 'completed' || tx.status === 'successful' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : tx.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>

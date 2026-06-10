@@ -174,9 +174,10 @@ exports.reverseWithdrawal = async (req, res) => {
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
     if (withdrawal.status !== 'approved') return res.status(400).json({ message: 'Only approved withdrawals can be reversed' });
 
+    const fullAmount = withdrawal.amount + (withdrawal.charge || 0);
     const wallet = await Wallet.findOne({ user: withdrawal.user });
     if (wallet) {
-      wallet.balance += withdrawal.amount;
+      wallet.balance += fullAmount;
       wallet.withdrawableBalance += withdrawal.amount;
       wallet.totalWithdrawn = Math.max(0, wallet.totalWithdrawn - withdrawal.amount);
       await wallet.save();

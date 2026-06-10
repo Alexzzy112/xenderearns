@@ -23,7 +23,7 @@ export default function Dashboard() {
         earningAPI.getEarnings(),
       ]);
       setDashboard(dashRes.data);
-      setEarnings(earnRes.data.earnings || []);
+      setEarnings(Array.isArray(earnRes.data) ? earnRes.data : (earnRes.data.earnings || []));
     } catch (err) {
       console.error('Failed to load dashboard', err);
     } finally {
@@ -70,7 +70,7 @@ export default function Dashboard() {
       <Layout>
         <div className="py-8 px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {user?.name}!</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {user?.firstName || 'User'}!</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Here's your investment overview</p>
           </div>
 
@@ -134,16 +134,16 @@ export default function Dashboard() {
                   {dashboard.recentTransactions.map((tx) => (
                     <div key={tx._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'credit' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
-                          <FiDollarSign className={`w-5 h-5 ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
+                          <FiDollarSign className={`w-5 h-5 ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'text-green-600' : 'text-red-600'}`} />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white capitalize">{tx.description || tx.type}</p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                        {tx.type === 'credit' ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
+                      <span className={`font-bold ${['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? 'text-green-600' : 'text-red-600'}`}>
+                        {['deposit', 'earning', 'referral_bonus', 'investment_return'].includes(tx.type) ? '+' : '-'}₦{(tx.amount || 0).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -159,19 +159,19 @@ export default function Dashboard() {
 
           <div className="card">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Active Investments</h2>
-            {dashboard?.activeInvestments?.length > 0 ? (
+            {dashboard?.investments?.filter(i => i.status === 'active').length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dashboard.activeInvestments.map((inv) => (
+                {dashboard.investments.filter(i => i.status === 'active').map((inv) => (
                   <div key={inv._id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                     <h3 className="font-bold text-gray-900 dark:text-white">{inv.product?.name}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Invested: ₦{(inv.amount || 0).toLocaleString()}</p>
                     <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
                       <FiTrendingUp className="w-4 h-4" />
-                      <span>₦{(inv.dailyEarning || 0).toLocaleString()}/day</span>
+                      <span>₦{Math.round(inv.amount * (inv.dailyRoi || 0) / 100).toLocaleString()}/day</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                       <FiClock className="w-4 h-4" />
-                      <span>{(inv.remainingDays || 0)} days left</span>
+                      <span>{inv.endDate ? Math.max(0, Math.ceil((new Date(inv.endDate) - new Date()) / (1000 * 60 * 60 * 24))) : 0} days left</span>
                     </div>
                   </div>
                 ))}
