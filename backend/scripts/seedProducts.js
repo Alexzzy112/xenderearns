@@ -6,7 +6,7 @@ const InvestmentProduct = require('../models/InvestmentProduct');
 const products = [
   {
     name: 'iPhone 15 Pro',
-    image: 'https://picsum.photos/seed/iphone15pro/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 3600,
     dailyRoi: 13.8889,
@@ -14,7 +14,7 @@ const products = [
   },
   {
     name: 'iPhone 15',
-    image: 'https://picsum.photos/seed/iphone15/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 10000,
     dailyRoi: 15,
@@ -22,7 +22,7 @@ const products = [
   },
   {
     name: 'iPhone 14 Pro',
-    image: 'https://picsum.photos/seed/iphone14pro/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14-pro.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 15000,
     dailyRoi: 13.8889,
@@ -30,7 +30,7 @@ const products = [
   },
   {
     name: 'iPhone 14',
-    image: 'https://picsum.photos/seed/iphone14/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 30000,
     dailyRoi: 13.8889,
@@ -38,7 +38,7 @@ const products = [
   },
   {
     name: 'iPhone 13 Pro',
-    image: 'https://picsum.photos/seed/iphone13pro/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-13-pro.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 50000,
     dailyRoi: 13.8889,
@@ -46,7 +46,7 @@ const products = [
   },
   {
     name: 'iPhone 13',
-    image: 'https://picsum.photos/seed/iphone13/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-13.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 80000,
     dailyRoi: 13.8889,
@@ -54,7 +54,7 @@ const products = [
   },
   {
     name: 'iPhone SE',
-    image: 'https://picsum.photos/seed/iphonese/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-se-2022.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 100000,
     dailyRoi: 13.8889,
@@ -62,7 +62,7 @@ const products = [
   },
   {
     name: 'iPhone 15 Pro Max',
-    image: 'https://picsum.photos/seed/iphone15promax/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro-max.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 500000,
     dailyRoi: 13.8889,
@@ -70,7 +70,7 @@ const products = [
   },
   {
     name: 'iPhone 16 Pro Max',
-    image: 'https://picsum.photos/seed/iphone16promax/400/400',
+    image: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-16-pro-max.jpg',
     description: 'Premium investment plan with guaranteed daily returns',
     investmentAmount: 1000000,
     dailyRoi: 13.8889,
