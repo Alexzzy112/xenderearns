@@ -19,6 +19,7 @@ router.get('/stats', adminController.getDashboardStats);
 router.get('/payments', adminController.getAllPayments);
 router.delete('/payments/:id', adminController.deletePayment);
 router.put('/payments/confirm', paymentController.confirmDeposit);
+router.post('/refresh-images', adminController.refreshProductImages);
 router.get('/investment-stats', adminController.getInvestmentStats);
 router.get('/users/:id/investments', adminController.getUserInvestments);
 router.put('/investments/:id/cancel', adminController.cancelInvestment);

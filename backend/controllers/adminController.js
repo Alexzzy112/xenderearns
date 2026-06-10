@@ -292,6 +292,32 @@ exports.setUserPurchaseLimit = async (req, res) => {
   }
 };
 
+const imageMap = {
+  'iPhone 15 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg',
+  'iPhone 15': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15.jpg',
+  'iPhone 14 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14-pro.jpg',
+  'iPhone 14': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14.jpg',
+  'iPhone 13 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-13-pro.jpg',
+  'iPhone 13': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-13.jpg',
+  'iPhone SE': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-se-2022.jpg',
+  'iPhone 15 Pro Max': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro-max.jpg',
+  'iPhone 16 Pro Max': 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-16-pro-max.jpg',
+};
+
+exports.refreshProductImages = async (req, res) => {
+  try {
+    let updated = 0;
+    for (const [name, image] of Object.entries(imageMap)) {
+      const result = await InvestmentProduct.updateOne({ name }, { $set: { image } });
+      if (result.modifiedCount > 0) updated++;
+    }
+    res.json({ message: `${updated} product images refreshed with iPhone photos` });
+  } catch (error) {
+    console.error('Refresh images error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.seedAdmin = async (req, res) => {
   try {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@xender.com';
