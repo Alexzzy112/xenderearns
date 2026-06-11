@@ -13,12 +13,6 @@ const calculateDailyEarnings = async () => {
 
     for (const investment of activeInvestments) {
       const now = new Date();
-      if (now > investment.endDate) {
-        investment.status = 'completed';
-        await investment.save();
-        continue;
-      }
-
       const hoursSincePurchase = (now - new Date(investment.startDate)) / (1000 * 60 * 60);
       if (hoursSincePurchase < 24) continue;
 
@@ -69,7 +63,7 @@ const calculateDailyEarnings = async () => {
       if (wallet) await wallet.save();
       await investment.save();
 
-      if (maxDay >= investment.duration) {
+      if (maxDay >= investment.duration || now > investment.endDate) {
         investment.status = 'completed';
         await investment.save();
       }
